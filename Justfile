@@ -113,6 +113,7 @@ build-macos: _ensure-dist
     echo "Built: {{ dist_dir }}/libgit2-darwin-${ARCH}.dylib"
 
 # Build libgit2 for macOS x86_64 (cross-compile on Apple Silicon)
+# Note: SSH disabled for cross-compile as libssh2 is architecture-specific
 build-macos-x86_64: _ensure-dist
     #!/usr/bin/env bash
     set -euo pipefail
@@ -130,11 +131,12 @@ build-macos-x86_64: _ensure-dist
     cd "libgit2-{{ libgit2_version }}"
 
     # Build for x86_64
+    # Note: SSH disabled because libssh2 from Homebrew is arm64-only when cross-compiling
     mkdir build && cd build
     cmake .. \
         -DCMAKE_BUILD_TYPE=Release \
         -DBUILD_SHARED_LIBS=ON \
-        -DUSE_SSH=ON \
+        -DUSE_SSH=OFF \
         -DUSE_HTTPS=SecureTransport \
         -DBUILD_TESTS=OFF \
         -DBUILD_CLI=OFF \
@@ -142,12 +144,15 @@ build-macos-x86_64: _ensure-dist
 
     cmake --build . --parallel
 
-    # Copy to dist with architecture suffix
-    cp libgit2.*.dylib "{{ justfile_directory() }}/{{ dist_dir }}/libgit2-darwin-x86_64.dylib"
+    # Copy the versioned dylib to dist with architecture suffix
+    # Use the most specific version (e.g., libgit2.1.8.4.dylib)
+    DYLIB=$(ls -1 libgit2.*.*.*.dylib 2>/dev/null | head -1 || ls -1 libgit2.*.dylib | head -1)
+    cp "$DYLIB" "{{ justfile_directory() }}/{{ dist_dir }}/libgit2-darwin-x86_64.dylib"
 
     echo "Built: {{ dist_dir }}/libgit2-darwin-x86_64.dylib"
 
 # Build libgit2 for macOS aarch64 (Apple Silicon)
+# Note: SSH disabled for cross-compile as libssh2 is architecture-specific
 build-macos-aarch64: _ensure-dist
     #!/usr/bin/env bash
     set -euo pipefail
@@ -165,11 +170,12 @@ build-macos-aarch64: _ensure-dist
     cd "libgit2-{{ libgit2_version }}"
 
     # Build for aarch64
+    # Note: SSH disabled because libssh2 from Homebrew may be x86_64-only when cross-compiling
     mkdir build && cd build
     cmake .. \
         -DCMAKE_BUILD_TYPE=Release \
         -DBUILD_SHARED_LIBS=ON \
-        -DUSE_SSH=ON \
+        -DUSE_SSH=OFF \
         -DUSE_HTTPS=SecureTransport \
         -DBUILD_TESTS=OFF \
         -DBUILD_CLI=OFF \
@@ -177,8 +183,10 @@ build-macos-aarch64: _ensure-dist
 
     cmake --build . --parallel
 
-    # Copy to dist with architecture suffix
-    cp libgit2.*.dylib "{{ justfile_directory() }}/{{ dist_dir }}/libgit2-darwin-aarch64.dylib"
+    # Copy the versioned dylib to dist with architecture suffix
+    # Use the most specific version (e.g., libgit2.1.8.4.dylib)
+    DYLIB=$(ls -1 libgit2.*.*.*.dylib 2>/dev/null | head -1 || ls -1 libgit2.*.dylib | head -1)
+    cp "$DYLIB" "{{ justfile_directory() }}/{{ dist_dir }}/libgit2-darwin-aarch64.dylib"
 
     echo "Built: {{ dist_dir }}/libgit2-darwin-aarch64.dylib"
 
