@@ -5,7 +5,7 @@
 import { assert, assertEquals, assertExists } from "@std/assert";
 
 import {
-  cleanupTestContext,
+  
   createCommitWithFiles,
   createTestContext,
 } from "./helpers.ts";
@@ -17,8 +17,7 @@ Deno.test("E2E Tag Tests", async (t) => {
 
   try {
     await t.step("create annotated tag on commit", async () => {
-      const ctx = await createTestContext({ withInitialCommit: false });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: false });
         const commitOid = await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
@@ -33,14 +32,11 @@ Deno.test("E2E Tag Tests", async (t) => {
 
         assertExists(tagOid);
         assertEquals(tagOid.length, 40);
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("create lightweight tag on commit", async () => {
-      const ctx = await createTestContext({ withInitialCommit: false });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: false });
         const commitOid = await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
@@ -53,14 +49,11 @@ Deno.test("E2E Tag Tests", async (t) => {
 
         assertExists(tagOid);
         assertEquals(tagOid.length, 40);
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("list all tags", async () => {
-      const ctx = await createTestContext({ withInitialCommit: false });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: false });
         const commitOid = await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
@@ -91,14 +84,11 @@ Deno.test("E2E Tag Tests", async (t) => {
         assert(tags.includes("v1.0.0"));
         assert(tags.includes("v2.0.0"));
         assert(tags.includes("latest"));
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("list tags matching pattern", async () => {
-      const ctx = await createTestContext({ withInitialCommit: false });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: false });
         const commitOid = await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
@@ -128,14 +118,11 @@ Deno.test("E2E Tag Tests", async (t) => {
         assertEquals(vTags.length, 2);
         assert(vTags.includes("v1.0.0"));
         assert(vTags.includes("v2.0.0"));
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("lookup annotated tag by OID", async () => {
-      const ctx = await createTestContext({ withInitialCommit: false });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: false });
         const commitOid = await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
@@ -159,14 +146,11 @@ Deno.test("E2E Tag Tests", async (t) => {
         assertEquals(tag.tagger.email, "test@example.com");
 
         tag.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("delete tag by name", async () => {
-      const ctx = await createTestContext({ withInitialCommit: false });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: false });
         const commitOid = await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
@@ -189,14 +173,11 @@ Deno.test("E2E Tag Tests", async (t) => {
         // Verify tag is deleted
         tags = ctx.repo.listTags();
         assertEquals(tags.length, 0);
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("iterate over tags with foreach", async () => {
-      const ctx = await createTestContext({ withInitialCommit: false });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: false });
         const commitOid = await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
@@ -224,14 +205,11 @@ Deno.test("E2E Tag Tests", async (t) => {
           assertExists(info.oid);
           assertEquals(info.oid.length, 40);
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("create tag with force flag overwrites existing", async () => {
-      const ctx = await createTestContext({ withInitialCommit: false });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: false });
         const commit1 = await createCommitWithFiles(ctx, "First commit", {
           "file.txt": "content1\n",
         });
@@ -264,14 +242,11 @@ Deno.test("E2E Tag Tests", async (t) => {
         assert(tag.message.startsWith("Release v1.0.0 (updated)"));
 
         tag.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("peel annotated tag to target commit", async () => {
-      const ctx = await createTestContext({ withInitialCommit: false });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: false });
         const commitOid = await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
@@ -291,14 +266,11 @@ Deno.test("E2E Tag Tests", async (t) => {
         assertEquals(peeledOid, commitOid);
 
         tag.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("empty repository has no tags", async () => {
-      const ctx = await createTestContext({ withInitialCommit: false });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: false });
         // Create initial commit (needed for repo to be valid)
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
@@ -306,14 +278,11 @@ Deno.test("E2E Tag Tests", async (t) => {
 
         const tags = ctx.repo.listTags();
         assertEquals(tags.length, 0);
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("tag target type is commit", async () => {
-      const ctx = await createTestContext({ withInitialCommit: false });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: false });
         const commitOid = await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
@@ -331,9 +300,7 @@ Deno.test("E2E Tag Tests", async (t) => {
         assertEquals(tag.targetType, "commit");
 
         tag.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
   } finally {
     shutdown();

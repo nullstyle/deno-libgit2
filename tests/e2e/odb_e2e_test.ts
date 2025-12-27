@@ -4,7 +4,7 @@
 
 import { assert, assertEquals, assertExists } from "@std/assert";
 import {
-  cleanupTestContext,
+  
   createCommitWithFiles,
   createTestContext,
 } from "./helpers.ts";
@@ -14,19 +14,15 @@ Deno.test("ODB E2E Tests", async (t) => {
   await init();
 
   await t.step("get odb from repository", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const odb = ctx.repo.odb();
       assertExists(odb);
       odb.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("check object exists - existing object", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const headOid = ctx.repo.headOid();
       const odb = ctx.repo.odb();
 
@@ -34,14 +30,11 @@ Deno.test("ODB E2E Tests", async (t) => {
       assertEquals(exists, true);
 
       odb.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("check object exists - non-existing object", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const odb = ctx.repo.odb();
 
       // Random non-existing OID
@@ -49,14 +42,11 @@ Deno.test("ODB E2E Tests", async (t) => {
       assertEquals(exists, false);
 
       odb.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("read object header", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const headOid = ctx.repo.headOid();
       const odb = ctx.repo.odb();
 
@@ -66,14 +56,11 @@ Deno.test("ODB E2E Tests", async (t) => {
       assert(header.size > 0);
 
       odb.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("read object", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const headOid = ctx.repo.headOid();
       const odb = ctx.repo.odb();
 
@@ -86,14 +73,11 @@ Deno.test("ODB E2E Tests", async (t) => {
 
       obj.free();
       odb.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("read blob object", async () => {
-    const ctx = await createTestContext({ withInitialCommit: false });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: false });
       // Create a file and commit it
       await createCommitWithFiles(ctx, "Add test file", {
         "test.txt": "Hello, World!",
@@ -122,14 +106,11 @@ Deno.test("ODB E2E Tests", async (t) => {
 
       obj.free();
       odb.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("hash data without writing", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const odb = ctx.repo.odb();
 
       const data = new TextEncoder().encode("Hello, World!");
@@ -143,14 +124,11 @@ Deno.test("ODB E2E Tests", async (t) => {
       assertEquals(oid, oid2);
 
       odb.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("write object to database", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const odb = ctx.repo.odb();
 
       const data = new TextEncoder().encode("Test blob content");
@@ -172,14 +150,11 @@ Deno.test("ODB E2E Tests", async (t) => {
 
       obj.free();
       odb.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("exists with prefix", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const headOid = ctx.repo.headOid();
       const odb = ctx.repo.odb();
 
@@ -191,9 +166,7 @@ Deno.test("ODB E2E Tests", async (t) => {
       assertEquals(result, headOid);
 
       odb.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   shutdown();

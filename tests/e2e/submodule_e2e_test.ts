@@ -6,7 +6,7 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { init, Repository, shutdown } from "../../mod.ts";
 import {
-  cleanupTestContext,
+  
   createCommitWithFiles,
   createTestContext,
 } from "./helpers.ts";
@@ -90,22 +90,18 @@ Deno.test("E2E Submodule Tests", async (t) => {
 
   try {
     await t.step("list submodules in repo without submodules", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
 
         const submodules = ctx.repo.listSubmodules();
         assertEquals(submodules.length, 0, "Should have no submodules");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("list submodules in repo with submodule", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
@@ -125,14 +121,11 @@ Deno.test("E2E Submodule Tests", async (t) => {
         const submodules = ctx.repo.listSubmodules();
         assertEquals(submodules.length, 1, "Should have one submodule");
         assertEquals(submodules[0], "libs/sub", "Submodule name should match");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("lookup submodule by name", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
@@ -152,14 +145,11 @@ Deno.test("E2E Submodule Tests", async (t) => {
         } finally {
           submodule.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("get submodule URL", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
@@ -181,14 +171,11 @@ Deno.test("E2E Submodule Tests", async (t) => {
         } finally {
           submodule.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("get submodule index ID", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
@@ -214,14 +201,11 @@ Deno.test("E2E Submodule Tests", async (t) => {
         } finally {
           submodule.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("get submodule status", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
@@ -247,14 +231,11 @@ Deno.test("E2E Submodule Tests", async (t) => {
           true,
           "Should be in WD",
         );
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("iterate over multiple submodules", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
@@ -315,14 +296,11 @@ Deno.test("E2E Submodule Tests", async (t) => {
           true,
           "Should have sub2",
         );
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("submodule not found returns null", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "content\n",
         });
@@ -335,9 +313,7 @@ Deno.test("E2E Submodule Tests", async (t) => {
           error = e as Error;
         }
         assertExists(error, "Should throw error for non-existent submodule");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
   } finally {
     shutdown();

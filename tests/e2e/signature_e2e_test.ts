@@ -2,8 +2,8 @@
  * End-to-end tests for Signature operations
  */
 
-import { assertEquals, assertExists, assertGreater } from "@std/assert";
-import { cleanupTestContext, createTestContext } from "./helpers.ts";
+import { assertExists } from "@std/assert";
+import {createTestContext } from "./helpers.ts";
 import {
   createSignatureNow,
   freeSignature,
@@ -21,28 +21,24 @@ Deno.test("E2E Signature Tests", async (t) => {
     await t.step(
       "Signature.now creates signature with current time",
       async () => {
-        const ctx = await createTestContext({ withInitialCommit: true });
-        try {
-          const beforeTime = Math.floor(Date.now() / 1000);
+        await using _ctx = await createTestContext({ withInitialCommit: true });
+          const _beforeTime = Math.floor(Date.now() / 1000);
 
           const sig = Signature.now("Test User", "test@example.com");
           assertExists(sig);
           assertExists(sig.ptr);
 
-          const afterTime = Math.floor(Date.now() / 1000);
+          const _afterTime = Math.floor(Date.now() / 1000);
 
           // Signature should have been created successfully
           // We can verify by using it in a commit or just freeing it without error
           sig.free();
-        } finally {
-          await cleanupTestContext(ctx);
-        }
+        
       },
     );
 
     await t.step("Signature.create with specific time", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using _ctx = await createTestContext({ withInitialCommit: true });
         // Create signature with specific timestamp
         const timestamp = 1609459200; // 2021-01-01 00:00:00 UTC
         const offset = -300; // UTC-5
@@ -58,14 +54,11 @@ Deno.test("E2E Signature Tests", async (t) => {
         assertExists(sig.ptr);
 
         sig.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("Signature.fromInfo with time info", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using _ctx = await createTestContext({ withInitialCommit: true });
         const info: SignatureInfo = {
           name: "Info Author",
           email: "info@example.com",
@@ -79,14 +72,11 @@ Deno.test("E2E Signature Tests", async (t) => {
         assertExists(sig.ptr);
 
         sig.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("Signature.fromInfo without time uses now", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using _ctx = await createTestContext({ withInitialCommit: true });
         const info: SignatureInfo = {
           name: "Now Author",
           email: "now@example.com",
@@ -98,14 +88,11 @@ Deno.test("E2E Signature Tests", async (t) => {
         assertExists(sig.ptr);
 
         sig.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("createSignatureNow function", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using _ctx = await createTestContext({ withInitialCommit: true });
         const lib = getLibrary();
         const sigPtr = createSignatureNow(
           lib,
@@ -117,26 +104,20 @@ Deno.test("E2E Signature Tests", async (t) => {
 
         // Clean up
         freeSignature(lib, sigPtr);
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("freeSignature handles null", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using _ctx = await createTestContext({ withInitialCommit: true });
         const lib = getLibrary();
 
         // Should not throw when freeing null
         freeSignature(lib, null);
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("Signature dispose pattern", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using _ctx = await createTestContext({ withInitialCommit: true });
         // Test using dispose
         {
           using sig = Signature.now("Dispose User", "dispose@example.com");
@@ -148,14 +129,11 @@ Deno.test("E2E Signature Tests", async (t) => {
         const sig2 = Signature.now("Another User", "another@example.com");
         assertExists(sig2.ptr);
         sig2.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("Signature.close alias for free", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using _ctx = await createTestContext({ withInitialCommit: true });
         const sig = Signature.now("Close User", "close@example.com");
         assertExists(sig.ptr);
 
@@ -164,14 +142,11 @@ Deno.test("E2E Signature Tests", async (t) => {
 
         // Calling close again should be safe (idempotent)
         sig.close();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("Multiple signatures can coexist", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using _ctx = await createTestContext({ withInitialCommit: true });
         const sig1 = Signature.now("User One", "one@example.com");
         const sig2 = Signature.now("User Two", "two@example.com");
         const sig3 = Signature.create(
@@ -188,14 +163,11 @@ Deno.test("E2E Signature Tests", async (t) => {
         sig1.free();
         sig2.free();
         sig3.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("Signature with various timezone offsets", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using _ctx = await createTestContext({ withInitialCommit: true });
         const timestamp = 1609459200;
 
         // UTC
@@ -237,14 +209,11 @@ Deno.test("E2E Signature Tests", async (t) => {
         );
         assertExists(sigNZ.ptr);
         sigNZ.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("Signature with special characters in name", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using _ctx = await createTestContext({ withInitialCommit: true });
         // Name with accented characters
         const sig1 = Signature.now("José García", "jose@example.com");
         assertExists(sig1.ptr);
@@ -259,14 +228,11 @@ Deno.test("E2E Signature Tests", async (t) => {
         const sig3 = Signature.now("Dev User", "dev@example.com");
         assertExists(sig3.ptr);
         sig3.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("Signature fromInfo partial time info", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using _ctx = await createTestContext({ withInitialCommit: true });
         // Only time, no offset - should use now()
         const info1: SignatureInfo = {
           name: "Partial User",
@@ -290,26 +256,20 @@ Deno.test("E2E Signature Tests", async (t) => {
         const sig2 = Signature.fromInfo(info2);
         assertExists(sig2.ptr);
         sig2.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("Signature with epoch timestamp", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using _ctx = await createTestContext({ withInitialCommit: true });
         // Unix epoch
         const sig = Signature.create("Epoch User", "epoch@example.com", 0, 0);
         assertExists(sig.ptr);
         sig.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("Signature with far future timestamp", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using _ctx = await createTestContext({ withInitialCommit: true });
         // Year 2100
         const timestamp = 4102444800;
         const sig = Signature.create(
@@ -320,9 +280,7 @@ Deno.test("E2E Signature Tests", async (t) => {
         );
         assertExists(sig.ptr);
         sig.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
   } finally {
     shutdown();

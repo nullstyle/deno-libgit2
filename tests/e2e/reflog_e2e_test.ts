@@ -16,7 +16,7 @@ import {
 } from "../../mod.ts";
 import {
   createTestContext,
-  cleanupTestContext,
+  
   createCommitWithFiles,
 } from "./helpers.ts";
 
@@ -25,8 +25,7 @@ Deno.test("E2E Reflog Tests", async (t) => {
 
   try {
     await t.step("read reflog for HEAD", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "First commit", {
           "file.txt": "content\n",
         });
@@ -37,14 +36,11 @@ Deno.test("E2E Reflog Tests", async (t) => {
         } finally {
           reflog.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("read reflog for refs/heads/main", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "First commit", {
           "file.txt": "content\n",
         });
@@ -59,14 +55,11 @@ Deno.test("E2E Reflog Tests", async (t) => {
         } finally {
           reflog.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("reflog entry count increases with commits", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "First commit", {
           "file.txt": "content 1\n",
         });
@@ -88,14 +81,11 @@ Deno.test("E2E Reflog Tests", async (t) => {
         reflog2.free();
 
         assertGreater(count2, count1, "Entry count should increase after commit");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("reflog entry contains old and new OID", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "First commit", {
           "file.txt": "content 1\n",
         });
@@ -120,14 +110,11 @@ Deno.test("E2E Reflog Tests", async (t) => {
         } finally {
           reflog.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("reflog entry contains committer information", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "First commit", {
           "file.txt": "content\n",
         });
@@ -142,14 +129,11 @@ Deno.test("E2E Reflog Tests", async (t) => {
         } finally {
           reflog.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("reflog entry contains message", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Test commit message", {
           "file.txt": "content\n",
         });
@@ -162,14 +146,11 @@ Deno.test("E2E Reflog Tests", async (t) => {
         } finally {
           reflog.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("iterate over all reflog entries", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create multiple commits
         await createCommitWithFiles(ctx, "Commit 1", { "file.txt": "v1\n" });
         await createCommitWithFiles(ctx, "Commit 2", { "file.txt": "v2\n" });
@@ -190,14 +171,11 @@ Deno.test("E2E Reflog Tests", async (t) => {
         } finally {
           reflog.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("reflog tracks branch creation", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", { "file.txt": "content\n" });
 
         // Create a new branch
@@ -210,14 +188,11 @@ Deno.test("E2E Reflog Tests", async (t) => {
         } finally {
           reflog.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("empty reflog for non-existent reference", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", { "file.txt": "content\n" });
 
         // Try to read reflog for non-existent reference
@@ -227,14 +202,11 @@ Deno.test("E2E Reflog Tests", async (t) => {
         } finally {
           reflog.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("reflog entry OIDs are valid hex strings", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "First", { "file.txt": "v1\n" });
         await createCommitWithFiles(ctx, "Second", { "file.txt": "v2\n" });
 
@@ -257,9 +229,7 @@ Deno.test("E2E Reflog Tests", async (t) => {
         } finally {
           reflog.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
   } finally {

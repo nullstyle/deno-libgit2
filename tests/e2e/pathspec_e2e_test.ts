@@ -4,7 +4,7 @@
 
 import { assertEquals, assertExists, assertGreater } from "@std/assert";
 import {
-  cleanupTestContext,
+  
   createCommitWithFiles,
   createTestContext,
 } from "./helpers.ts";
@@ -14,8 +14,7 @@ Deno.test("E2E Pathspec Tests", async (t) => {
   await init();
 
   await t.step("create pathspec and match single path", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Create a pathspec for *.txt files
       const ps = ctx.repo.createPathspec(["*.txt"]);
       assertExists(ps);
@@ -26,14 +25,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
       assertEquals(ps.matchesPath("dir/file.txt"), true);
 
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("pathspec with multiple patterns", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const ps = ctx.repo.createPathspec(["*.txt", "*.md", "src/*"]);
 
       assertEquals(ps.matchesPath("readme.txt"), true);
@@ -43,14 +39,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
       assertEquals(ps.matchesPath("file.js"), false);
 
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("pathspec case-insensitive matching", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const ps = ctx.repo.createPathspec(["*.TXT"]);
 
       // With IGNORE_CASE flag
@@ -64,14 +57,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
       );
 
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("pathspec no glob mode", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const ps = ctx.repo.createPathspec(["*.txt"]);
 
       // With NO_GLOB flag, should match literally
@@ -79,14 +69,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
       assertEquals(ps.matchesPath("file.txt", GitPathspecFlags.NO_GLOB), false);
 
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("pathspec directory pattern", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const ps = ctx.repo.createPathspec(["src/**"]);
 
       assertEquals(ps.matchesPath("src/file.ts"), true);
@@ -94,14 +81,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
       assertEquals(ps.matchesPath("lib/file.ts"), false);
 
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("pathspec negation pattern", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Note: libgit2 pathspec doesn't support negation like gitignore
       // This test verifies basic pattern matching
       const ps = ctx.repo.createPathspec(["*.ts"]);
@@ -110,28 +94,22 @@ Deno.test("E2E Pathspec Tests", async (t) => {
       assertEquals(ps.matchesPath("main.js"), false);
 
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("empty pathspec matches everything", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const ps = ctx.repo.createPathspec([]);
 
       // Empty pathspec matches everything in libgit2
       assertEquals(ps.matchesPath("any/file.txt"), true);
 
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("pathspec with exact filename", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const ps = ctx.repo.createPathspec(["package.json"]);
 
       assertEquals(ps.matchesPath("package.json"), true);
@@ -140,14 +118,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
       assertEquals(ps.matchesPath("package.lock"), false);
 
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("matchWorkdir finds files in working directory", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Create some files in the working directory
       await createCommitWithFiles(ctx, "Add files", {
         "file1.txt": "content1\n",
@@ -170,14 +145,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
 
       matchList.free();
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("matchWorkdir with directory pattern", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Create files in different directories
       await createCommitWithFiles(ctx, "Add files", {
         "src/main.ts": "main\n",
@@ -199,14 +171,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
 
       matchList.free();
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("matchIndex finds staged files", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Create and stage some files
       await Deno.writeTextFile(`${ctx.repoPath}/staged1.txt`, "content1\n");
       await Deno.writeTextFile(`${ctx.repoPath}/staged2.txt`, "content2\n");
@@ -233,14 +202,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
       matchList.free();
       ps.free();
       index.close();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("matchTree finds files in a commit tree", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Create a commit with specific files
       const commitOid = await createCommitWithFiles(ctx, "Add files", {
         "tree1.txt": "content1\n",
@@ -262,14 +228,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
 
       matchList.free();
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("PathspecMatchList entry retrieval", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       await createCommitWithFiles(ctx, "Add files", {
         "a.txt": "a\n",
         "b.txt": "b\n",
@@ -295,14 +258,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
 
       matchList.free();
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("pathspec FIND_FAILURES tracks unmatched patterns", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Create some files
       await createCommitWithFiles(ctx, "Add files", {
         "file.txt": "content\n",
@@ -329,14 +289,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
 
       matchList.free();
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("pathspec USE_CASE forces case-sensitive", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const ps = ctx.repo.createPathspec(["*.TXT"]);
 
       // With USE_CASE flag, should be case-sensitive
@@ -347,14 +304,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
       );
 
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("pathspec combined flags", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const ps = ctx.repo.createPathspec(["*.txt"]);
 
       // Combine flags
@@ -366,14 +320,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
       assertEquals(ps.matchesPath("file.txt", flags), false);
 
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("pathspec with special characters", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Test patterns with special glob characters
       const ps = ctx.repo.createPathspec(["[abc]*.txt"]);
 
@@ -383,14 +334,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
       assertEquals(ps.matchesPath("d_file.txt"), false);
 
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("pathspec with question mark wildcard", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const ps = ctx.repo.createPathspec(["file?.txt"]);
 
       assertEquals(ps.matchesPath("file1.txt"), true);
@@ -399,14 +347,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
       assertEquals(ps.matchesPath("file12.txt"), false);
 
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("pathspec dispose pattern", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Test using dispose
       {
         using ps = ctx.repo.createPathspec(["*.txt"]);
@@ -418,14 +363,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
       const ps2 = ctx.repo.createPathspec(["*.md"]);
       assertEquals(ps2.matchesPath("file.md"), true);
       ps2.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("PathspecMatchList dispose pattern", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       await createCommitWithFiles(ctx, "Add file", {
         "test.txt": "content\n",
       });
@@ -440,9 +382,7 @@ Deno.test("E2E Pathspec Tests", async (t) => {
       }
 
       ps.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   shutdown();

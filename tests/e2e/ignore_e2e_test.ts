@@ -3,29 +3,25 @@
  */
 
 import { assertEquals } from "@std/assert";
-import { cleanupTestContext, createTestContext } from "./helpers.ts";
+import {createTestContext } from "./helpers.ts";
 import { init, shutdown } from "../../mod.ts";
 
 Deno.test("E2E Ignore Tests", async (t) => {
   await init();
 
   await t.step("check if path is ignored with no .gitignore", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Create a file
       await Deno.writeTextFile(`${ctx.repoPath}/test.txt`, "content");
 
       // Check if it's ignored (should not be)
       const ignored = ctx.repo.pathIsIgnored("test.txt");
       assertEquals(ignored, false);
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("check if path is ignored with .gitignore", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Create .gitignore
       await Deno.writeTextFile(`${ctx.repoPath}/.gitignore`, "*.log\n");
 
@@ -39,14 +35,11 @@ Deno.test("E2E Ignore Tests", async (t) => {
 
       assertEquals(txtIgnored, false);
       assertEquals(logIgnored, true);
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("add ignore rule programmatically", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Create a file
       await Deno.writeTextFile(`${ctx.repoPath}/temp.tmp`, "temp content");
 
@@ -58,14 +51,11 @@ Deno.test("E2E Ignore Tests", async (t) => {
 
       // Now should be ignored
       assertEquals(ctx.repo.pathIsIgnored("temp.tmp"), true);
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("add multiple ignore rules at once", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Create files
       await Deno.writeTextFile(`${ctx.repoPath}/file.tmp`, "tmp");
       await Deno.writeTextFile(`${ctx.repoPath}/file.bak`, "bak");
@@ -78,14 +68,11 @@ Deno.test("E2E Ignore Tests", async (t) => {
       assertEquals(ctx.repo.pathIsIgnored("file.tmp"), true);
       assertEquals(ctx.repo.pathIsIgnored("file.bak"), true);
       assertEquals(ctx.repo.pathIsIgnored("file.txt"), false);
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("clear internal ignore rules", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Add ignore rule
       ctx.repo.addIgnoreRule("*.tmp\n");
       assertEquals(ctx.repo.pathIsIgnored("file.tmp"), true);
@@ -95,14 +82,11 @@ Deno.test("E2E Ignore Tests", async (t) => {
 
       // Should no longer be ignored (unless in .gitignore file)
       assertEquals(ctx.repo.pathIsIgnored("file.tmp"), false);
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("ignore directory pattern", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Create directory and file
       await Deno.mkdir(`${ctx.repoPath}/build`, { recursive: true });
       await Deno.writeTextFile(`${ctx.repoPath}/build/output.js`, "code");
@@ -113,14 +97,11 @@ Deno.test("E2E Ignore Tests", async (t) => {
       // Check if directory contents are ignored
       assertEquals(ctx.repo.pathIsIgnored("build/output.js"), true);
       assertEquals(ctx.repo.pathIsIgnored("build/"), true);
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("ignore with negation pattern", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Create .gitignore with negation
       await Deno.writeTextFile(
         `${ctx.repoPath}/.gitignore`,
@@ -130,14 +111,11 @@ Deno.test("E2E Ignore Tests", async (t) => {
       // Check ignores
       assertEquals(ctx.repo.pathIsIgnored("debug.log"), true);
       assertEquals(ctx.repo.pathIsIgnored("important.log"), false);
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("ignore nested directory pattern", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Create nested directories
       await Deno.mkdir(`${ctx.repoPath}/src/node_modules`, { recursive: true });
       await Deno.mkdir(`${ctx.repoPath}/lib/node_modules`, { recursive: true });
@@ -155,25 +133,19 @@ Deno.test("E2E Ignore Tests", async (t) => {
         true,
       );
       assertEquals(ctx.repo.pathIsIgnored("lib/node_modules/"), true);
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("default internal ignores", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Default internal ignores should include ".", "..", ".git"
       assertEquals(ctx.repo.pathIsIgnored(".git"), true);
       assertEquals(ctx.repo.pathIsIgnored(".git/config"), true);
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("ignore rule with spaces in filename", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Create file with spaces
       await Deno.writeTextFile(
         `${ctx.repoPath}/file with spaces.txt`,
@@ -185,23 +157,18 @@ Deno.test("E2E Ignore Tests", async (t) => {
 
       // Check if ignored
       assertEquals(ctx.repo.pathIsIgnored("file with spaces.txt"), true);
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("check non-existent file path", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Add ignore rule
       ctx.repo.addIgnoreRule("*.log\n");
 
       // Check non-existent file (should still work based on pattern)
       assertEquals(ctx.repo.pathIsIgnored("nonexistent.log"), true);
       assertEquals(ctx.repo.pathIsIgnored("nonexistent.txt"), false);
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   shutdown();

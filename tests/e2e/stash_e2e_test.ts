@@ -12,7 +12,7 @@ import {
   StashFlags,
 } from "../../mod.ts";
 import {
-  cleanupTestContext,
+  
   createCommitWithFiles,
   createTestContext,
 } from "./helpers.ts";
@@ -22,8 +22,7 @@ Deno.test("E2E Stash Tests", async (t) => {
 
   try {
     await t.step("stash save creates a stash entry", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create initial commit
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "initial\n",
@@ -48,14 +47,11 @@ Deno.test("E2E Stash Tests", async (t) => {
           "initial\n",
           "File should be restored to original",
         );
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("stash save with KEEP_INDEX flag", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "initial\n",
         });
@@ -82,14 +78,11 @@ Deno.test("E2E Stash Tests", async (t) => {
         // Staged changes should still be in working directory
         const content = await Deno.readTextFile(`${ctx.repoPath}/file.txt`);
         assertEquals(content, "staged\n", "Staged changes should be kept");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("stash save with INCLUDE_UNTRACKED flag", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "initial\n",
         });
@@ -117,14 +110,11 @@ Deno.test("E2E Stash Tests", async (t) => {
           exists = false;
         }
         assertEquals(exists, false, "Untracked file should be removed");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("list stashes returns all stashed states", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "initial\n",
         });
@@ -156,16 +146,13 @@ Deno.test("E2E Stash Tests", async (t) => {
           "On master: First stash",
           "Older stash second",
         );
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step({
       name: "stash apply restores changes",
       fn: async () => {
-        const ctx = await createTestContext({ withInitialCommit: false });
-        try {
+        await using ctx = await createTestContext({ withInitialCommit: false });
           // Create initial commit with file.txt
           await createCommitWithFiles(ctx, "Initial commit", {
             "file.txt": "initial\n",
@@ -200,17 +187,14 @@ Deno.test("E2E Stash Tests", async (t) => {
             1,
             "Stash should still exist after apply",
           );
-        } finally {
-          await cleanupTestContext(ctx);
-        }
+        
       },
     });
 
     await t.step({
       name: "stash pop applies and removes stash",
       fn: async () => {
-        const ctx = await createTestContext({ withInitialCommit: false });
-        try {
+        await using ctx = await createTestContext({ withInitialCommit: false });
           // Create initial commit with file.txt
           await createCommitWithFiles(ctx, "Initial commit", {
             "file.txt": "initial\n",
@@ -237,15 +221,12 @@ Deno.test("E2E Stash Tests", async (t) => {
           // Stash should be removed after pop
           const stashes = ctx.repo.listStashes();
           assertEquals(stashes.length, 0, "Stash should be removed after pop");
-        } finally {
-          await cleanupTestContext(ctx);
-        }
+        
       },
     });
 
     await t.step("stash drop removes stash without applying", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "initial\n",
         });
@@ -271,14 +252,11 @@ Deno.test("E2E Stash Tests", async (t) => {
         // Stash should be removed
         const stashes = ctx.repo.listStashes();
         assertEquals(stashes.length, 0, "Stash should be removed");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("stash apply with REINSTATE_INDEX flag", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "initial\n",
         });
@@ -305,14 +283,11 @@ Deno.test("E2E Stash Tests", async (t) => {
         // Verify changes are restored
         const content = await Deno.readTextFile(`${ctx.repoPath}/file.txt`);
         assertEquals(content, "staged\n", "Staged changes should be restored");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("stash with nothing to stash returns null", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "initial\n",
         });
@@ -328,16 +303,13 @@ Deno.test("E2E Stash Tests", async (t) => {
           null,
           "Should return null when nothing to stash",
         );
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step({
       name: "multiple stashes can be managed independently",
       fn: async () => {
-        const ctx = await createTestContext({ withInitialCommit: false });
-        try {
+        await using ctx = await createTestContext({ withInitialCommit: false });
           // Create initial commit with file.txt
           await createCommitWithFiles(ctx, "Initial commit", {
             "file.txt": "initial\n",
@@ -387,9 +359,7 @@ Deno.test("E2E Stash Tests", async (t) => {
           ctx.repo.stashApply(0);
           content = await Deno.readTextFile(`${ctx.repoPath}/file.txt`);
           assertEquals(content, "change3\n", "Should apply newest stash");
-        } finally {
-          await cleanupTestContext(ctx);
-        }
+        
       },
     });
   } finally {

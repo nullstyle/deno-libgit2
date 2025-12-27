@@ -577,7 +577,6 @@ export interface StatusOptions {
   pathspec?: string[];
 }
 
-
 /**
  * Merge analysis results
  */
@@ -691,7 +690,6 @@ export interface ConflictEntry {
   /** "Theirs" entry OID */
   theirsOid?: string;
 }
-
 
 /**
  * Blame flags

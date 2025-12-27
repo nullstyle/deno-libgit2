@@ -16,7 +16,7 @@ import {
 } from "../../mod.ts";
 import {
   createTestContext,
-  cleanupTestContext,
+  
   createCommitWithFiles,
 } from "./helpers.ts";
 
@@ -25,8 +25,7 @@ Deno.test("E2E Rebase Tests", async (t) => {
 
   try {
     await t.step("init rebase with two branches", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create initial commit on main
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "initial content\n",
@@ -74,14 +73,11 @@ Deno.test("E2E Rebase Tests", async (t) => {
         } finally {
           rebase.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("rebase operation count matches commits", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", {
           "file.txt": "initial\n",
         });
@@ -116,14 +112,11 @@ Deno.test("E2E Rebase Tests", async (t) => {
         } finally {
           rebase.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("get rebase operation by index", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", { "file.txt": "init\n" });
 
         const mainOid = ctx.repo.headOid();
@@ -152,14 +145,11 @@ Deno.test("E2E Rebase Tests", async (t) => {
         } finally {
           rebase.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("perform rebase next operation", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", { "file.txt": "init\n" });
 
         const mainOid = ctx.repo.headOid();
@@ -187,14 +177,11 @@ Deno.test("E2E Rebase Tests", async (t) => {
         } finally {
           rebase.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("abort rebase", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", { "file.txt": "init\n" });
 
         const mainOid = ctx.repo.headOid();
@@ -222,14 +209,11 @@ Deno.test("E2E Rebase Tests", async (t) => {
         } finally {
           rebase.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("rebase commit creates new commit", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", { "file.txt": "init\n" });
 
         const mainOid = ctx.repo.headOid();
@@ -267,14 +251,11 @@ Deno.test("E2E Rebase Tests", async (t) => {
         } finally {
           rebase.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("rebase finish completes rebase", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", { "file.txt": "init\n" });
 
         const mainOid = ctx.repo.headOid();
@@ -315,14 +296,11 @@ Deno.test("E2E Rebase Tests", async (t) => {
         } finally {
           rebase.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("rebase commit with custom message", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", { "file.txt": "init\n" });
 
         const mainOid = ctx.repo.headOid();
@@ -362,14 +340,11 @@ Deno.test("E2E Rebase Tests", async (t) => {
         } finally {
           rebase.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("rebase operations list", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", { "file.txt": "init\n" });
 
         const mainOid = ctx.repo.headOid();
@@ -407,9 +382,7 @@ Deno.test("E2E Rebase Tests", async (t) => {
           rebase.abort();
           rebase.free();
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
   } finally {

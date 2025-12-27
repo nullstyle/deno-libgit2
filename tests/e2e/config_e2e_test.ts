@@ -3,26 +3,22 @@
  */
 
 import { assert, assertEquals, assertExists } from "@std/assert";
-import { cleanupTestContext, createTestContext } from "./helpers.ts";
+import {createTestContext } from "./helpers.ts";
 import { init, shutdown } from "../../mod.ts";
 
 Deno.test("E2E Config Tests", async (t) => {
   await init();
 
   await t.step("get repository config", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const config = ctx.repo.config();
       assertExists(config);
       config.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("set and get string value", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const config = ctx.repo.config();
 
       // Set a custom config value
@@ -35,14 +31,11 @@ Deno.test("E2E Config Tests", async (t) => {
       snapshot.free();
 
       config.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("set and get int32 value", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const config = ctx.repo.config();
 
       // Set an integer config value
@@ -55,14 +48,11 @@ Deno.test("E2E Config Tests", async (t) => {
       snapshot.free();
 
       config.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("set and get int64 value", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const config = ctx.repo.config();
 
       // Set a large integer config value
@@ -75,14 +65,11 @@ Deno.test("E2E Config Tests", async (t) => {
       snapshot.free();
 
       config.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("set and get bool value", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const config = ctx.repo.config();
 
       // Set boolean config values
@@ -96,14 +83,11 @@ Deno.test("E2E Config Tests", async (t) => {
       snapshot.free();
 
       config.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("delete config entry", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const config = ctx.repo.config();
 
       // Set a value
@@ -124,14 +108,11 @@ Deno.test("E2E Config Tests", async (t) => {
       snapshot.free();
 
       config.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("iterate over config entries", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const config = ctx.repo.config();
 
       // Set some values
@@ -163,14 +144,11 @@ Deno.test("E2E Config Tests", async (t) => {
       );
 
       config.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("iterate with pattern match", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const config = ctx.repo.config();
 
       // Set some values
@@ -193,14 +171,11 @@ Deno.test("E2E Config Tests", async (t) => {
       assert(!entries.includes("other.gamma"));
 
       config.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("get config entry with metadata", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const config = ctx.repo.config();
 
       // Set a value
@@ -217,14 +192,11 @@ Deno.test("E2E Config Tests", async (t) => {
       snapshot.free();
 
       config.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("create config snapshot", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const config = ctx.repo.config();
 
       // Set initial value
@@ -246,14 +218,11 @@ Deno.test("E2E Config Tests", async (t) => {
 
       snapshot.free();
       config.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("user.name and user.email config", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const config = ctx.repo.config();
 
       // Set user config
@@ -267,14 +236,11 @@ Deno.test("E2E Config Tests", async (t) => {
       snapshot.free();
 
       config.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("core.autocrlf config", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const config = ctx.repo.config();
 
       // Set core.autocrlf to false
@@ -292,14 +258,11 @@ Deno.test("E2E Config Tests", async (t) => {
       snapshot.free();
 
       config.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("non-existent key returns null", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       const config = ctx.repo.config();
 
       // Get non-existent key
@@ -309,9 +272,7 @@ Deno.test("E2E Config Tests", async (t) => {
       snapshot.free();
 
       config.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   shutdown();

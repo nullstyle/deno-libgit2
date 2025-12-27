@@ -17,7 +17,7 @@ import {
 } from "../../mod.ts";
 import {
   createTestContext,
-  cleanupTestContext,
+  
   createCommitWithFiles,
 } from "./helpers.ts";
 
@@ -26,8 +26,7 @@ Deno.test("E2E Describe Tests", async (t) => {
 
   try {
     await t.step("describe commit with annotated tag", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", { "file.txt": "content\n" });
         const headOid = ctx.repo.headOid()!;
         ctx.repo.close();
@@ -43,14 +42,11 @@ Deno.test("E2E Describe Tests", async (t) => {
         const description = ctx.repo.describeCommit(headOid);
         assertExists(description, "Should return description");
         assertEquals(description, "v1.0.0", "Should match tag name");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("describe commit with commits since annotated tag", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", { "file.txt": "content\n" });
         ctx.repo.close();
 
@@ -68,14 +64,11 @@ Deno.test("E2E Describe Tests", async (t) => {
         assertExists(description, "Should return description");
         assertStringIncludes(description, "v1.0.0", "Should include tag name");
         assertStringIncludes(description, "-1-g", "Should include commit count and hash prefix");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("describe workdir", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", { "file.txt": "content\n" });
         ctx.repo.close();
 
@@ -89,14 +82,11 @@ Deno.test("E2E Describe Tests", async (t) => {
         const description = ctx.repo.describeWorkdir();
         assertExists(description, "Should return description");
         assertEquals(description, "v1.0.0", "Should match tag name");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("describe workdir with dirty suffix", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", { "file.txt": "content\n" });
         ctx.repo.close();
 
@@ -115,14 +105,11 @@ Deno.test("E2E Describe Tests", async (t) => {
         });
         assertExists(description, "Should return description");
         assertStringIncludes(description, "-dirty", "Should include dirty suffix");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("describe with abbreviated size", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", { "file.txt": "content\n" });
         ctx.repo.close();
 
@@ -143,14 +130,11 @@ Deno.test("E2E Describe Tests", async (t) => {
         const match = description.match(/-g([a-f0-9]+)$/);
         assertExists(match, "Should have hash suffix");
         assertEquals(match![1].length, 12, "Hash should be 12 characters");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("describe with always long format", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", { "file.txt": "content\n" });
         ctx.repo.close();
 
@@ -167,14 +151,11 @@ Deno.test("E2E Describe Tests", async (t) => {
         });
         assertExists(description, "Should return description");
         assertStringIncludes(description, "-0-g", "Should use long format even at tag");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("describe with TAGS strategy finds lightweight tags", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", { "file.txt": "content\n" });
         ctx.repo.close();
 
@@ -189,14 +170,11 @@ Deno.test("E2E Describe Tests", async (t) => {
         });
         assertExists(description, "Should return description");
         assertEquals(description, "lightweight-tag", "Should find lightweight tag");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("describe with ALL strategy finds branches", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", { "file.txt": "content\n" });
         const headOid = ctx.repo.headOid()!;
 
@@ -208,14 +186,11 @@ Deno.test("E2E Describe Tests", async (t) => {
           description.includes("heads/") || description.includes("master") || description.includes("main"),
           "Should find branch reference"
         );
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("describe with pattern filter", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", { "file.txt": "content\n" });
         ctx.repo.close();
 
@@ -238,14 +213,11 @@ Deno.test("E2E Describe Tests", async (t) => {
         });
         assertExists(description, "Should return description");
         assertEquals(description, "release-1.0", "Should match pattern");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("describe commit without tag falls back to OID", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", { "file.txt": "content\n" });
         const headOid = ctx.repo.headOid()!;
 
@@ -254,14 +226,11 @@ Deno.test("E2E Describe Tests", async (t) => {
         });
         assertExists(description, "Should return description");
         assert(headOid.startsWith(description.slice(0, 7)), "Should be abbreviated OID");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("describe with max candidates", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial commit", { "file.txt": "content\n" });
         ctx.repo.close();
 
@@ -278,9 +247,7 @@ Deno.test("E2E Describe Tests", async (t) => {
         });
         assertExists(description, "Should return description");
         assertEquals(description, "v1.0.0", "Should find tag");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
   } finally {
     shutdown();

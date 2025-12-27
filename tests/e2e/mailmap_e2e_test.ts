@@ -3,26 +3,22 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { cleanupTestContext, createTestContext } from "./helpers.ts";
+import {createTestContext } from "./helpers.ts";
 import { init, Mailmap, Repository, shutdown } from "../../mod.ts";
 
 Deno.test("Mailmap E2E Tests", async (t) => {
   await init();
 
   await t.step("create empty mailmap", async () => {
-    const ctx = await createTestContext();
-    try {
+    await using _ctx = await createTestContext();
       const mailmap = Mailmap.create();
       assertExists(mailmap);
       mailmap.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("add entry to mailmap", async () => {
-    const ctx = await createTestContext();
-    try {
+    await using _ctx = await createTestContext();
       const mailmap = Mailmap.create();
 
       // Add an entry mapping old email to new name/email
@@ -39,14 +35,11 @@ Deno.test("Mailmap E2E Tests", async (t) => {
       assertEquals(result.email, "real@example.com");
 
       mailmap.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("resolve unknown email returns original", async () => {
-    const ctx = await createTestContext();
-    try {
+    await using _ctx = await createTestContext();
       const mailmap = Mailmap.create();
 
       // Resolve an email that's not in the mailmap
@@ -55,14 +48,11 @@ Deno.test("Mailmap E2E Tests", async (t) => {
       assertEquals(result.email, "unknown@example.com");
 
       mailmap.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("load mailmap from buffer", async () => {
-    const ctx = await createTestContext();
-    try {
+    await using _ctx = await createTestContext();
       const mailmapContent = `
 # This is a comment
 Real Name <real@example.com> <old@example.com>
@@ -83,14 +73,11 @@ Another Name <another@example.com> Old Name <oldname@example.com>
       assertEquals(result2.email, "another@example.com");
 
       mailmap.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("load mailmap from repository", async () => {
-    const ctx = await createTestContext({ withInitialCommit: true });
-    try {
+    await using ctx = await createTestContext({ withInitialCommit: true });
       // Create a .mailmap file in the repository
       const mailmapPath = `${ctx.repoPath}/.mailmap`;
       await Deno.writeTextFile(
@@ -109,14 +96,11 @@ Another Name <another@example.com> Old Name <oldname@example.com>
 
       mailmap.free();
       repo.close();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("multiple entries with same email", async () => {
-    const ctx = await createTestContext();
-    try {
+    await using _ctx = await createTestContext();
       const mailmap = Mailmap.create();
 
       // Add multiple entries for the same email
@@ -132,14 +116,11 @@ Another Name <another@example.com> Old Name <oldname@example.com>
       assertEquals(result.email, "first@example.com");
 
       mailmap.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   await t.step("resolve with name matching", async () => {
-    const ctx = await createTestContext();
-    try {
+    await using _ctx = await createTestContext();
       const mailmapContent = `
 Real Name <real@example.com> Specific Name <specific@example.com>
 `;
@@ -157,9 +138,7 @@ Real Name <real@example.com> Specific Name <specific@example.com>
       assertEquals(result2.email, "specific@example.com");
 
       mailmap.free();
-    } finally {
-      await cleanupTestContext(ctx);
-    }
+    
   });
 
   shutdown();

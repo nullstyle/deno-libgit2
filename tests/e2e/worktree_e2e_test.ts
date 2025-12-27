@@ -6,7 +6,7 @@
 import { assert, assertEquals, assertExists } from "@std/assert";
 import { init, shutdown } from "../../mod.ts";
 import {
-  cleanupTestContext,
+  
   createCommitWithFiles,
   createTestContext,
 } from "./helpers.ts";
@@ -18,23 +18,19 @@ Deno.test("E2E Worktree Tests", async (t) => {
     await t.step(
       "list worktrees returns empty array for repo without worktrees",
       async () => {
-        const ctx = await createTestContext({ withInitialCommit: true });
-        try {
+        await using ctx = await createTestContext({ withInitialCommit: true });
           await createCommitWithFiles(ctx, "Initial", {
             "file.txt": "content\n",
           });
 
           const worktrees = ctx.repo.listWorktrees();
           assertEquals(worktrees, [], "Should return empty array");
-        } finally {
-          await cleanupTestContext(ctx);
-        }
+        
       },
     );
 
     await t.step("add worktree creates new working directory", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "content\n",
         });
@@ -56,14 +52,11 @@ Deno.test("E2E Worktree Tests", async (t) => {
 
         // Cleanup worktree directory
         await Deno.remove(worktreePath, { recursive: true });
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("list worktrees returns added worktrees", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "content\n",
         });
@@ -80,14 +73,11 @@ Deno.test("E2E Worktree Tests", async (t) => {
 
         // Cleanup worktree directory
         await Deno.remove(worktreePath, { recursive: true });
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("lookup worktree by name", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "content\n",
         });
@@ -106,14 +96,11 @@ Deno.test("E2E Worktree Tests", async (t) => {
 
         // Cleanup worktree directory
         await Deno.remove(worktreePath, { recursive: true });
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("worktree name and path properties", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "content\n",
         });
@@ -132,16 +119,13 @@ Deno.test("E2E Worktree Tests", async (t) => {
 
         // Cleanup worktree directory
         await Deno.remove(worktreePath, { recursive: true });
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step(
       "worktree validate returns true for valid worktree",
       async () => {
-        const ctx = await createTestContext({ withInitialCommit: true });
-        try {
+        await using ctx = await createTestContext({ withInitialCommit: true });
           await createCommitWithFiles(ctx, "Initial", {
             "file.txt": "content\n",
           });
@@ -157,15 +141,12 @@ Deno.test("E2E Worktree Tests", async (t) => {
 
           // Cleanup worktree directory
           await Deno.remove(worktreePath, { recursive: true });
-        } finally {
-          await cleanupTestContext(ctx);
-        }
+        
       },
     );
 
     await t.step("lock and unlock worktree", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "content\n",
         });
@@ -197,14 +178,11 @@ Deno.test("E2E Worktree Tests", async (t) => {
 
         // Cleanup worktree directory
         await Deno.remove(worktreePath, { recursive: true });
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("prune worktree removes it", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "content\n",
         });
@@ -232,14 +210,11 @@ Deno.test("E2E Worktree Tests", async (t) => {
           0,
           "Should have no worktrees after prune",
         );
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("multiple worktrees", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "content\n",
         });
@@ -263,14 +238,11 @@ Deno.test("E2E Worktree Tests", async (t) => {
         // Cleanup worktree directories
         await Deno.remove(worktreePath1, { recursive: true });
         await Deno.remove(worktreePath2, { recursive: true });
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("lookup non-existent worktree returns null", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "content\n",
         });
@@ -281,9 +253,7 @@ Deno.test("E2E Worktree Tests", async (t) => {
           null,
           "Should return null for non-existent worktree",
         );
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
   } finally {
     shutdown();

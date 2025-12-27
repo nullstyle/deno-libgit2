@@ -6,7 +6,7 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { init, shutdown } from "../../mod.ts";
 import {
-  cleanupTestContext,
+  
   createCommitWithDeletions,
   createCommitWithFiles,
   createTestContext,
@@ -17,8 +17,7 @@ Deno.test("E2E Diff Tests", async (t) => {
 
   try {
     await t.step("diff tree to tree", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create first commit
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "initial\n",
@@ -41,14 +40,11 @@ Deno.test("E2E Diff Tests", async (t) => {
         assertEquals(numDeltas, 2, "Should have 2 deltas (modified + added)");
 
         diff.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("diff tree to workdir", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create initial commit
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "initial\n",
@@ -67,14 +63,11 @@ Deno.test("E2E Diff Tests", async (t) => {
         assertEquals(numDeltas, 1, "Should have 1 delta (modified file)");
 
         diff.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("diff index to workdir", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create initial commit
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "initial\n",
@@ -92,14 +85,11 @@ Deno.test("E2E Diff Tests", async (t) => {
         assertEquals(numDeltas, 1, "Should have 1 delta (modified file)");
 
         diff.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("diff with added files", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create initial commit
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "initial\n",
@@ -123,14 +113,11 @@ Deno.test("E2E Diff Tests", async (t) => {
         assertEquals(numDeltas, 2, "Should have 2 deltas (added files)");
 
         diff.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("diff with deleted files", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create initial commit with multiple files
         await createCommitWithFiles(ctx, "Initial", {
           "file1.txt": "file1\n",
@@ -152,14 +139,11 @@ Deno.test("E2E Diff Tests", async (t) => {
         assertEquals(numDeltas, 1, "Should have 1 delta (deleted file)");
 
         diff.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("diff empty (no changes)", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create commit
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "initial\n",
@@ -175,14 +159,11 @@ Deno.test("E2E Diff Tests", async (t) => {
         assertEquals(numDeltas, 0, "Should have 0 deltas (no changes)");
 
         diff.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("get delta from diff", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create first commit
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "initial\n",
@@ -206,9 +187,7 @@ Deno.test("E2E Diff Tests", async (t) => {
         assertEquals(delta.newFile.path, "file.txt");
 
         diff.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
   } finally {
     shutdown();

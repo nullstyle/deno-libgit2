@@ -81,7 +81,7 @@ export function findFileHistory(
     startOid?: string;
     /** Whether to include file content from the most recent commit */
     includeContent?: boolean;
-  } = {}
+  } = {},
 ): FileHistoryResult {
   const { maxCommits, startOid, includeContent = true } = options;
 
@@ -140,7 +140,7 @@ export function findFileDeletion(
     startOid?: string;
     /** Whether to include file content */
     includeContent?: boolean;
-  } = {}
+  } = {},
 ): FileDeletionInfo | null {
   const { maxCommits, startOid, includeContent = true } = options;
 
@@ -191,7 +191,7 @@ export function findFileModifications(
     maxCommits?: number;
     /** Starting commit OID (defaults to HEAD) */
     startOid?: string;
-  } = {}
+  } = {},
 ): FileCommitInfo[] {
   const { maxCommits, startOid } = options;
 
@@ -232,7 +232,7 @@ export function findFileModifications(
 export function getFileAtCommits(
   repo: Repository,
   filePath: string,
-  commitOids: string[]
+  commitOids: string[],
 ): Map<string, string | null> {
   const results = new Map<string, string | null>();
 
@@ -263,7 +263,7 @@ export function findFileCreation(
     maxCommits?: number;
     /** Starting commit OID (defaults to HEAD) */
     startOid?: string;
-  } = {}
+  } = {},
 ): FileCommitInfo | null {
   const { maxCommits, startOid } = options;
 
@@ -309,7 +309,10 @@ export function fileExistsAtHead(repo: Repository, filePath: string): boolean {
  * @param repo - The repository
  * @param filePath - Path to the file
  */
-export function getFileAtHead(repo: Repository, filePath: string): string | null {
+export function getFileAtHead(
+  repo: Repository,
+  filePath: string,
+): string | null {
   try {
     const headOid = repo.headOid();
     const commit = repo.lookupCommit(headOid);

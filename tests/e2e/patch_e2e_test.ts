@@ -6,7 +6,7 @@
 import { assert, assertEquals, assertExists } from "@std/assert";
 import { init, shutdown } from "../../mod.ts";
 import {
-  cleanupTestContext,
+  
   createCommitWithFiles,
   createTestContext,
 } from "./helpers.ts";
@@ -16,8 +16,7 @@ Deno.test("E2E Patch Tests", async (t) => {
 
   try {
     await t.step("create patch from diff", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create first commit
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "initial\n",
@@ -46,14 +45,11 @@ Deno.test("E2E Patch Tests", async (t) => {
 
         patch.free();
         diff.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("patch num hunks", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create first commit
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "line1\nline2\nline3\n",
@@ -77,14 +73,11 @@ Deno.test("E2E Patch Tests", async (t) => {
 
         patch.free();
         diff.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("patch get delta", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create first commit
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "initial\n",
@@ -110,14 +103,11 @@ Deno.test("E2E Patch Tests", async (t) => {
 
         patch.free();
         diff.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("patch for added file", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create first commit
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "initial\n",
@@ -149,14 +139,11 @@ Deno.test("E2E Patch Tests", async (t) => {
 
         patch.free();
         diff.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("patch line stats", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create first commit
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "line1\nline2\nline3\n",
@@ -183,9 +170,7 @@ Deno.test("E2E Patch Tests", async (t) => {
 
         patch.free();
         diff.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
   } finally {
     shutdown();

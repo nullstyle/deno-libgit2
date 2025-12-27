@@ -15,7 +15,7 @@ import {
 } from "../../mod.ts";
 import {
   createTestContext,
-  cleanupTestContext,
+  
   createCommitWithFiles,
 } from "./helpers.ts";
 
@@ -24,22 +24,18 @@ Deno.test("E2E Graph Tests", async (t) => {
 
   try {
     await t.step("ahead_behind with same commit returns 0, 0", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Commit 1", { "file.txt": "content\n" });
         const headOid = ctx.repo.headOid()!;
 
         const result = ctx.repo.aheadBehind(headOid, headOid);
         assertEquals(result.ahead, 0, "Same commit should have 0 ahead");
         assertEquals(result.behind, 0, "Same commit should have 0 behind");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("ahead_behind with linear history", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create first commit
         await createCommitWithFiles(ctx, "Commit 1", { "file1.txt": "content1\n" });
         const commit1 = ctx.repo.headOid()!;
@@ -66,14 +62,11 @@ Deno.test("E2E Graph Tests", async (t) => {
         const result3 = ctx.repo.aheadBehind(commit2, commit1);
         assertEquals(result3.ahead, 1, "commit2 should be 1 ahead of commit1");
         assertEquals(result3.behind, 0, "commit2 should be 0 behind commit1");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("ahead_behind with diverged branches", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create base commit
         await createCommitWithFiles(ctx, "Base commit", { "base.txt": "base\n" });
         const baseOid = ctx.repo.headOid()!;
@@ -99,14 +92,11 @@ Deno.test("E2E Graph Tests", async (t) => {
         const result = ctx.repo.aheadBehind(branchAOid, branchBOid);
         assertEquals(result.ahead, 2, "Branch A should be 2 ahead of Branch B");
         assertEquals(result.behind, 1, "Branch A should be 1 behind Branch B");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("descendant_of with direct parent", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create first commit
         await createCommitWithFiles(ctx, "Parent commit", { "file1.txt": "content1\n" });
         const parentOid = ctx.repo.headOid()!;
@@ -122,14 +112,11 @@ Deno.test("E2E Graph Tests", async (t) => {
         // Parent is NOT descendant of child
         const isNotDescendant = ctx.repo.isDescendantOf(parentOid, childOid);
         assertFalse(isNotDescendant, "Parent should not be descendant of child");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("descendant_of with grandparent", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create grandparent commit
         await createCommitWithFiles(ctx, "Grandparent", { "file1.txt": "content1\n" });
         const grandparentOid = ctx.repo.headOid()!;
@@ -144,28 +131,22 @@ Deno.test("E2E Graph Tests", async (t) => {
         // Grandchild is descendant of grandparent
         const isDescendant = ctx.repo.isDescendantOf(grandchildOid, grandparentOid);
         assert(isDescendant, "Grandchild should be descendant of grandparent");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("descendant_of with same commit returns false", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Commit", { "file.txt": "content\n" });
         const commitOid = ctx.repo.headOid()!;
 
         // A commit is NOT considered a descendant of itself
         const isDescendant = ctx.repo.isDescendantOf(commitOid, commitOid);
         assertFalse(isDescendant, "A commit should not be descendant of itself");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("descendant_of with unrelated commits", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create base commit
         await createCommitWithFiles(ctx, "Base", { "base.txt": "base\n" });
         const baseOid = ctx.repo.headOid()!;
@@ -199,14 +180,11 @@ Deno.test("E2E Graph Tests", async (t) => {
 
         const bDescOfBase = ctx.repo.isDescendantOf(branchBOid, baseOid);
         assert(bDescOfBase, "Branch B should be descendant of base");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("ahead_behind useful for branch comparison", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Simulate a typical workflow: main branch and feature branch
         await createCommitWithFiles(ctx, "Main commit 1", { "main1.txt": "main1\n" });
         const mainOid = ctx.repo.headOid()!;
@@ -221,9 +199,7 @@ Deno.test("E2E Graph Tests", async (t) => {
         const result = ctx.repo.aheadBehind(featureOid, mainOid);
         assertEquals(result.ahead, 3, "Feature should be 3 ahead of main");
         assertEquals(result.behind, 0, "Feature should be 0 behind main (no new commits on main)");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
   } finally {
     shutdown();

@@ -6,7 +6,7 @@
 import { assert, assertEquals, assertExists } from "@std/assert";
 import { init, shutdown } from "../../mod.ts";
 import {
-  cleanupTestContext,
+  
   createCommitWithFiles,
   createTestContext,
 } from "./helpers.ts";
@@ -16,8 +16,7 @@ Deno.test("E2E Revert Tests", async (t) => {
 
   try {
     await t.step("revert commit to index", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create initial commit
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "initial\n",
@@ -39,14 +38,11 @@ Deno.test("E2E Revert Tests", async (t) => {
         assertExists(entryCount, "Index should have entries");
 
         index.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("revert modifies working directory", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create initial commit
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "initial\n",
@@ -73,14 +69,11 @@ Deno.test("E2E Revert Tests", async (t) => {
           false
         );
         assert(!fileExists, "Feature file should be removed after revert");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("revert file modification", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create initial commit with a file
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "original content\n",
@@ -102,14 +95,11 @@ Deno.test("E2E Revert Tests", async (t) => {
         // Verify content is reverted
         content = await Deno.readTextFile(`${ctx.repoPath}/file.txt`);
         assertEquals(content, "original content\n");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("revert detects conflicts", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create initial commit
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "initial\n",
@@ -136,14 +126,11 @@ Deno.test("E2E Revert Tests", async (t) => {
         assert(hasConflicts, "Index should have conflicts");
 
         index.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("revert non-existent commit throws error", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "initial\n",
         });
@@ -158,14 +145,11 @@ Deno.test("E2E Revert Tests", async (t) => {
           threw = true;
         }
         assert(threw, "Should throw error for non-existent commit");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("revert to index preserves working directory", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create initial commit
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "initial\n",
@@ -192,9 +176,7 @@ Deno.test("E2E Revert Tests", async (t) => {
         );
 
         index.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
   } finally {
     shutdown();

@@ -7,22 +7,47 @@
 
 import { createCommit, Index, init, Repository, shutdown } from "../../mod.ts";
 
-/** Test context containing a temporary directory and initialized repository */
-export interface TestContext {
-  /** Path to the temporary directory */
-  tempDir: string;
-  /** Path to the repository within the temp directory */
-  repoPath: string;
-  /** The opened repository instance */
-  repo: Repository;
-}
-
 /** Options for creating a test context */
 export interface TestContextOptions {
   /** Whether to create a bare repository (default: false) */
   bare?: boolean;
   /** Whether to create an initial commit (default: false) */
   withInitialCommit?: boolean;
+}
+
+/** Test context containing a temporary directory and initialized repository */
+export class TestContext {
+  /** Path to the temporary directory */
+  readonly tempDir: string;
+  /** Path to the repository within the temp directory */
+  readonly repoPath: string;
+  /** The opened repository instance (can be reassigned for tests that reopen repos) */
+  repo: Repository;
+
+  constructor(tempDir: string, repoPath: string, repo: Repository) {
+    this.tempDir = tempDir;
+    this.repoPath = repoPath;
+    this.repo = repo;
+  }
+
+  /**
+   * Clean up the test context (close repo and remove temp directory)
+   */
+  async cleanup(): Promise<void> {
+    try {
+      this.repo.close();
+    } catch {
+      // Ignore errors during cleanup
+    }
+    await removeTempDir(this.tempDir);
+  }
+
+  /**
+   * Support for `await using` syntax
+   */
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.cleanup();
+  }
 }
 
 /**
@@ -91,7 +116,15 @@ export async function deleteFile(path: string): Promise<void> {
 }
 
 /**
- * Creates a test context with a temporary directory and initialized repository
+ * Creates a test context with a temporary directory and initialized repository.
+ * Supports `await using` for automatic cleanup.
+ *
+ * @example
+ * ```ts
+ * await using ctx = await createTestContext({ withInitialCommit: true });
+ * // Use ctx.repo, ctx.repoPath, etc.
+ * // Automatically cleaned up when scope exits
+ * ```
  */
 export async function createTestContext(
   options: TestContextOptions = {},
@@ -112,11 +145,10 @@ export async function createTestContext(
       "# Test Repository\n\nThis is a test repository.\n",
     );
 
-    const index = Index.fromRepository(repo);
+    using index = Index.fromRepository(repo);
     index.add("README.md");
     index.write();
     const treeOid = index.writeTree();
-    index.close();
 
     createCommit(repo, {
       message: "Initial commit",
@@ -126,34 +158,27 @@ export async function createTestContext(
     });
   }
 
-  return { tempDir, repoPath, repo };
+  return new TestContext(tempDir, repoPath, repo);
 }
 
 /**
  * Cleans up a test context by closing the repository and removing the temp directory
+ * @deprecated Use `await using ctx = await createTestContext()` instead
  */
 export async function cleanupTestContext(ctx: TestContext): Promise<void> {
-  try {
-    ctx.repo.close();
-  } catch {
-    // Ignore errors during cleanup
-  }
-  await removeTempDir(ctx.tempDir);
+  await ctx.cleanup();
 }
 
 /**
  * Runs a test with automatic setup and cleanup
+ * @deprecated Use `await using ctx = await createTestContext()` instead
  */
 export async function withTestContext(
   options: TestContextOptions,
   fn: (ctx: TestContext) => Promise<void> | void,
 ): Promise<void> {
-  const ctx = await createTestContext(options);
-  try {
-    await fn(ctx);
-  } finally {
-    await cleanupTestContext(ctx);
-  }
+  await using ctx = await createTestContext(options);
+  await fn(ctx);
 }
 
 /**
@@ -172,13 +197,12 @@ export async function createCommitWithFiles(
   }
 
   // Stage files
-  const index = Index.fromRepository(ctx.repo);
+  using index = Index.fromRepository(ctx.repo);
   for (const path of Object.keys(files)) {
     index.add(path);
   }
   index.write();
   const treeOid = index.writeTree();
-  index.close();
 
   // Get parent commits
   const parents: string[] = [];
@@ -218,13 +242,12 @@ export async function createCommitWithDeletions(
   }
 
   // Remove from index
-  const index = Index.fromRepository(ctx.repo);
+  using index = Index.fromRepository(ctx.repo);
   for (const path of filesToDelete) {
     index.remove(path);
   }
   index.write();
   const treeOid = index.writeTree();
-  index.close();
 
   // Get parent commits
   const parents: string[] = [];

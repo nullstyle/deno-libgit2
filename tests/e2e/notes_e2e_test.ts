@@ -6,7 +6,7 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { init, shutdown } from "../../mod.ts";
 import {
-  cleanupTestContext,
+  
   createCommitWithFiles,
   createTestContext,
 } from "./helpers.ts";
@@ -16,8 +16,7 @@ Deno.test("E2E Notes Tests", async (t) => {
 
   try {
     await t.step("create note on commit", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "content\n",
         });
@@ -34,14 +33,11 @@ Deno.test("E2E Notes Tests", async (t) => {
         );
 
         assertExists(noteOid, "Should return note OID");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("read note from commit", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "content\n",
         });
@@ -62,14 +58,11 @@ Deno.test("E2E Notes Tests", async (t) => {
         assertEquals(note.message, "Test note message", "Message should match");
 
         note.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("note author and committer", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "content\n",
         });
@@ -102,14 +95,11 @@ Deno.test("E2E Notes Tests", async (t) => {
         );
 
         note.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("remove note from commit", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "content\n",
         });
@@ -138,14 +128,11 @@ Deno.test("E2E Notes Tests", async (t) => {
         // Verify it's gone
         const removedNote = ctx.repo.readNote(headOid);
         assertEquals(removedNote, null, "Note should be removed");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("iterate notes", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         // Create multiple commits with notes
         await createCommitWithFiles(ctx, "Commit 1", {
           "file1.txt": "content1\n",
@@ -172,14 +159,11 @@ Deno.test("E2E Notes Tests", async (t) => {
         // Iterate notes
         const notes = ctx.repo.listNotes();
         assertEquals(notes.length, 2, "Should have two notes");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("overwrite note with force", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "content\n",
         });
@@ -208,14 +192,11 @@ Deno.test("E2E Notes Tests", async (t) => {
         assertEquals(note.message, "Updated note", "Message should be updated");
 
         note.free();
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("read note that doesn't exist returns null", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "content\n",
         });
@@ -226,28 +207,22 @@ Deno.test("E2E Notes Tests", async (t) => {
         // Try to read non-existent note
         const note = ctx.repo.readNote(headOid);
         assertEquals(note, null, "Should return null for non-existent note");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("get default notes reference", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         const defaultRef = ctx.repo.defaultNotesRef();
         assertEquals(
           defaultRef,
           "refs/notes/commits",
           "Default ref should be refs/notes/commits",
         );
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
 
     await t.step("create note with custom namespace", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
+      await using ctx = await createTestContext({ withInitialCommit: true });
         await createCommitWithFiles(ctx, "Initial", {
           "file.txt": "content\n",
         });
@@ -279,9 +254,7 @@ Deno.test("E2E Notes Tests", async (t) => {
         // Should not find in default namespace
         const defaultNote = ctx.repo.readNote(headOid);
         assertEquals(defaultNote, null, "Should not find in default namespace");
-      } finally {
-        await cleanupTestContext(ctx);
-      }
+      
     });
   } finally {
     shutdown();
