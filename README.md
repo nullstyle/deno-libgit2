@@ -57,99 +57,78 @@ Or add it to your `deno.json`:
 ## Quick Start
 
 ```typescript
-import { init, Repository, shutdown } from "jsr:@nullstyle/libgit2";
+import { initGit, Repository } from "jsr:@nullstyle/libgit2";
 
-// Initialize libgit2 (async - loads the native library)
-await init();
+// Initialize libgit2 with automatic cleanup via `using`
+using git = await initGit();
 
-try {
-  using repo = Repository.open(".");
-  console.log(`Repository: ${repo.path}`);
-  console.log(`HEAD: ${repo.headOid()}`);
-} finally {
-  shutdown();
-}
+using repo = Repository.open(".");
+console.log(`Repository: ${repo.path}`);
+console.log(`HEAD: ${repo.headOid()}`);
+// Library is automatically shut down when `git` goes out of scope
 ```
 
 ## Usage Examples
 
 ### Resource Management
 
-Classes that wrap native resources implement `Symbol.dispose` and can be used
-with `using` for automatic cleanup:
+Both the library and classes that wrap native resources implement `Symbol.dispose`
+and can be used with `using` for automatic cleanup:
 
 ```typescript
-import { init, Repository, Index, shutdown } from "jsr:@nullstyle/libgit2";
+import { initGit, Repository, Index } from "jsr:@nullstyle/libgit2";
 
-await init();
-try {
-  using repo = Repository.open(".");
-  using index = Index.fromRepository(repo);
+using git = await initGit();
+using repo = Repository.open(".");
+using index = Index.fromRepository(repo);
 
-  // Resources are automatically freed when they go out of scope
-  console.log(`Index entries: ${index.entryCount}`);
-} finally {
-  shutdown();
-}
+// Resources are automatically freed when they go out of scope
+console.log(`Index entries: ${index.entryCount}`);
 ```
 
-### Using the Helper Function
-
-The `withLibrary` helper manages initialization and shutdown automatically:
+### Listing Branches and Commits
 
 ```typescript
-import { Repository, withLibrary } from "jsr:@nullstyle/libgit2";
+import { initGit, Repository } from "jsr:@nullstyle/libgit2";
 
-await withLibrary(async () => {
-  using repo = Repository.open(".");
+using git = await initGit();
+using repo = Repository.open(".");
 
-  console.log("Branches:");
-  for (const branch of repo.listBranches()) {
-    const marker = branch.isHead ? "* " : "  ";
-    console.log(`${marker}${branch.name}`);
-  }
+console.log("Branches:");
+for (const branch of repo.listBranches()) {
+  const marker = branch.isHead ? "* " : "  ";
+  console.log(`${marker}${branch.name}`);
+}
 
-  console.log("\nRecent Commits:");
-  for (const commit of repo.walkCommits(undefined, 5)) {
-    const shortOid = commit.oid.slice(0, 7);
-    const summary = commit.message.split("\n")[0];
-    console.log(`${shortOid} ${summary}`);
-  }
-});
+console.log("\nRecent Commits:");
+for (const commit of repo.walkCommits(undefined, 5)) {
+  const shortOid = commit.oid.slice(0, 7);
+  const summary = commit.message.split("\n")[0];
+  console.log(`${shortOid} ${summary}`);
+}
 ```
 
 ### Creating a Commit
 
 ```typescript
-import {
-  createCommit,
-  Index,
-  init,
-  Repository,
-  shutdown,
-} from "jsr:@nullstyle/libgit2";
+import { createCommit, Index, initGit, Repository } from "jsr:@nullstyle/libgit2";
 
-await init();
+using git = await initGit();
+using repo = Repository.open("/path/to/repo");
+using index = Index.fromRepository(repo);
 
-try {
-  using repo = Repository.open("/path/to/repo");
-  using index = Index.fromRepository(repo);
+// Stage files
+index.add("README.md");
+index.add("src/main.ts");
+index.write();
 
-  // Stage files
-  index.add("README.md");
-  index.add("src/main.ts");
-  index.write();
+// Create the commit
+const oid = createCommit(repo, {
+  message: "Add initial files",
+  author: { name: "Your Name", email: "you@example.com" },
+});
 
-  // Create the commit
-  const oid = createCommit(repo, {
-    message: "Add initial files",
-    author: { name: "Your Name", email: "you@example.com" },
-  });
-
-  console.log(`Created commit: ${oid}`);
-} finally {
-  shutdown();
-}
+console.log(`Created commit: ${oid}`);
 ```
 
 ### Finding Deleted File History
@@ -161,138 +140,127 @@ import {
   fileExistsAtHead,
   findFileDeletion,
   findFileHistory,
-  init,
+  initGit,
   Repository,
-  shutdown,
 } from "jsr:@nullstyle/libgit2";
 
-await init();
+using git = await initGit();
+using repo = Repository.open("/path/to/repo");
 
-try {
-  using repo = Repository.open("/path/to/repo");
+const filePath = "path/to/deleted-file.md";
 
-  const filePath = "path/to/deleted-file.md";
+// Check if file exists at HEAD
+if (!fileExistsAtHead(repo, filePath)) {
+  // Find when and where the file was deleted
+  const deletion = findFileDeletion(repo, filePath, { includeContent: true });
 
-  // Check if file exists at HEAD
-  if (!fileExistsAtHead(repo, filePath)) {
-    // Find when and where the file was deleted
-    const deletion = findFileDeletion(repo, filePath, { includeContent: true });
-
-    if (deletion) {
-      console.log(`Deleted in: ${deletion.deletedInCommit.commitOid}`);
-      console.log(`Last existed in: ${deletion.lastExistedInCommit.commitOid}`);
-      console.log(`Content at deletion:\n${deletion.lastContent}`);
-    }
+  if (deletion) {
+    console.log(`Deleted in: ${deletion.deletedInCommit.commitOid}`);
+    console.log(`Last existed in: ${deletion.lastExistedInCommit.commitOid}`);
+    console.log(`Content at deletion:\n${deletion.lastContent}`);
   }
-
-  // Get full history of the file
-  const history = findFileHistory(repo, filePath);
-  console.log(`File appeared in ${history.commits.length} commits`);
-} finally {
-  shutdown();
 }
+
+// Get full history of the file
+const history = findFileHistory(repo, filePath);
+console.log(`File appeared in ${history.commits.length} commits`);
 ```
 
 ### Working with Diffs
 
 ```typescript
-import { init, Repository, shutdown } from "jsr:@nullstyle/libgit2";
+import { initGit, Repository } from "jsr:@nullstyle/libgit2";
 
-await init();
+using git = await initGit();
+using repo = Repository.open(".");
 
-try {
-  using repo = Repository.open(".");
+// Diff between two commits
+const headOid = repo.headOid();
+using diff = repo.diffTreeToWorkdir(headOid);
 
-  // Diff between two commits
-  const headOid = repo.headOid();
-  using diff = repo.diffTreeToWorkdir(headOid);
+console.log(`Changed files: ${diff.numDeltas}`);
 
-  console.log(`Changed files: ${diff.numDeltas}`);
-
-  for (const delta of diff.deltas()) {
-    console.log(`${delta.status}: ${delta.newFile.path}`);
-  }
-} finally {
-  shutdown();
+for (const delta of diff.deltas()) {
+  console.log(`${delta.status}: ${delta.newFile.path}`);
 }
 ```
 
 ### Merge Operations
 
 ```typescript
-import { init, Repository, shutdown, GitMergeAnalysis } from "jsr:@nullstyle/libgit2";
+import { GitMergeAnalysis, initGit, Repository } from "jsr:@nullstyle/libgit2";
 
-await init();
+using git = await initGit();
+using repo = Repository.open(".");
 
-try {
-  using repo = Repository.open(".");
+// Analyze merge possibility
+const annotated = repo.annotatedCommitFromRevspec("feature-branch");
+const analysis = repo.mergeAnalysis(annotated);
 
-  // Analyze merge possibility
-  const annotated = repo.annotatedCommitFromRevspec("feature-branch");
-  const analysis = repo.mergeAnalysis(annotated);
+if (analysis.analysis & GitMergeAnalysis.FASTFORWARD) {
+  console.log("Fast-forward merge possible");
+} else if (analysis.analysis & GitMergeAnalysis.NORMAL) {
+  console.log("Normal merge required");
+}
 
-  if (analysis.analysis & GitMergeAnalysis.FASTFORWARD) {
-    console.log("Fast-forward merge possible");
-  } else if (analysis.analysis & GitMergeAnalysis.NORMAL) {
-    console.log("Normal merge required");
+// Perform merge
+repo.merge(annotated);
+
+// Check for conflicts
+const conflicts = repo.getConflicts();
+if (conflicts.length > 0) {
+  console.log("Conflicts detected:");
+  for (const conflict of conflicts) {
+    console.log(`  ${conflict.ancestorPath}`);
   }
-
-  // Perform merge
-  repo.merge(annotated);
-
-  // Check for conflicts
-  const conflicts = repo.getConflicts();
-  if (conflicts.length > 0) {
-    console.log("Conflicts detected:");
-    for (const conflict of conflicts) {
-      console.log(`  ${conflict.ancestorPath}`);
-    }
-  }
-} finally {
-  shutdown();
 }
 ```
 
 ### Stash Operations
 
 ```typescript
-import { init, Repository, shutdown } from "jsr:@nullstyle/libgit2";
+import { initGit, Repository } from "jsr:@nullstyle/libgit2";
 
-await init();
+using git = await initGit();
+using repo = Repository.open(".");
 
-try {
-  using repo = Repository.open(".");
+// Save current changes to stash
+const stashOid = repo.stashSave({
+  message: "Work in progress",
+});
+console.log(`Stashed: ${stashOid}`);
 
-  // Save current changes to stash
-  const stashOid = repo.stashSave({
-    message: "Work in progress",
-  });
-  console.log(`Stashed: ${stashOid}`);
-
-  // List stashes
-  const stashes = repo.listStashes();
-  for (const stash of stashes) {
-    console.log(`${stash.index}: ${stash.message}`);
-  }
-
-  // Apply and drop the stash
-  repo.stashPop();
-} finally {
-  shutdown();
+// List stashes
+const stashes = repo.listStashes();
+for (const stash of stashes) {
+  console.log(`${stash.index}: ${stash.message}`);
 }
+
+// Apply and drop the stash
+repo.stashPop();
 ```
 
 ## API Reference
 
 ### Library Management
 
-| Function       | Description                                           |
-| -------------- | ----------------------------------------------------- |
-| `init()`       | Initialize libgit2 (async, loads the native library)  |
-| `shutdown()`   | Shutdown libgit2 and free resources                   |
-| `withLibrary()`| Run a function with automatic init/shutdown           |
-| `version()`    | Get libgit2 version as `{major, minor, revision}`     |
-| `versionString()` | Get libgit2 version as a string                    |
+| Function          | Description                                           |
+| ----------------- | ----------------------------------------------------- |
+| `initGit()`       | Initialize libgit2, returns a `GitLibrary` handle for use with `using` |
+| `version()`       | Get libgit2 version as `{major, minor, revision}`     |
+| `versionString()` | Get libgit2 version as a string                       |
+
+The `GitLibrary` object returned by `initGit()` implements `Symbol.dispose`, so it can be used with the `using` statement for automatic cleanup:
+
+```typescript
+using git = await initGit();
+// Library is automatically shut down when `git` goes out of scope
+```
+
+You can also access version info directly from the `GitLibrary` object:
+- `git.version` - Version as `{major, minor, revision}`
+- `git.versionString` - Version as a string
+- `git.shutdown()` - Manually shutdown (also called automatically on dispose)
 
 ### Repository Class
 
