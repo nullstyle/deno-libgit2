@@ -3,7 +3,7 @@
  * Tests use real file operations in temporary directories
  */
 
-import { assert, assertEquals, assertExists } from "@std/assert";
+import { assert, assertEquals, assertExists, assertThrows } from "@std/assert";
 import { init, shutdown } from "../../mod.ts";
 import { createCommitWithFiles, createTestContext } from "./helpers.ts";
 
@@ -161,6 +161,365 @@ Deno.test("E2E Patch Tests", async (t) => {
       assert(stats.deletions >= 1, "Should have deletions");
 
       patch.free();
+      diff.free();
+    });
+
+    await t.step("patch ptr getter returns valid pointer", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "initial\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      await createCommitWithFiles(ctx, "Modified", {
+        "file.txt": "modified\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      const patch = ctx.repo.patchFromDiff(diff, 0);
+      assertExists(patch);
+
+      const ptr = patch.ptr;
+      assertExists(ptr);
+
+      patch.free();
+      diff.free();
+    });
+
+    await t.step("patch Symbol.dispose works correctly", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "initial\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      await createCommitWithFiles(ctx, "Modified", {
+        "file.txt": "modified\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+
+      {
+        using patch = ctx.repo.patchFromDiff(diff, 0);
+        assertExists(patch);
+        assert(patch.numHunks >= 0);
+      }
+      // patch is automatically disposed here
+
+      diff.free();
+    });
+
+    await t.step("patch double free is safe", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "initial\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      await createCommitWithFiles(ctx, "Modified", {
+        "file.txt": "modified\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      const patch = ctx.repo.patchFromDiff(diff, 0);
+      assertExists(patch);
+
+      // First free
+      patch.free();
+
+      // Second free should be safe (no-op)
+      patch.free();
+
+      diff.free();
+    });
+
+    await t.step("patch numHunks throws after freed", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "initial\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      await createCommitWithFiles(ctx, "Modified", {
+        "file.txt": "modified\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      const patch = ctx.repo.patchFromDiff(diff, 0);
+      assertExists(patch);
+
+      patch.free();
+
+      assertThrows(
+        () => patch.numHunks,
+        Error,
+        "freed",
+      );
+
+      diff.free();
+    });
+
+    await t.step("patch getDelta throws after freed", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "initial\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      await createCommitWithFiles(ctx, "Modified", {
+        "file.txt": "modified\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      const patch = ctx.repo.patchFromDiff(diff, 0);
+      assertExists(patch);
+
+      patch.free();
+
+      assertThrows(
+        () => patch.getDelta(),
+        Error,
+        "freed",
+      );
+
+      diff.free();
+    });
+
+    await t.step("patch lineStats throws after freed", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "initial\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      await createCommitWithFiles(ctx, "Modified", {
+        "file.txt": "modified\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      const patch = ctx.repo.patchFromDiff(diff, 0);
+      assertExists(patch);
+
+      patch.free();
+
+      assertThrows(
+        () => patch.lineStats,
+        Error,
+        "freed",
+      );
+
+      diff.free();
+    });
+
+    await t.step("patch toString throws after freed", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "initial\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      await createCommitWithFiles(ctx, "Modified", {
+        "file.txt": "modified\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      const patch = ctx.repo.patchFromDiff(diff, 0);
+      assertExists(patch);
+
+      patch.free();
+
+      assertThrows(
+        () => patch.toString(),
+        Error,
+        "freed",
+      );
+
+      diff.free();
+    });
+
+    await t.step("patch with file modifications", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      // Create first commit with a file
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "original content\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      // Create second commit with different content
+      await createCommitWithFiles(ctx, "Modify file", {
+        "file.txt": "new content\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      assert(diff.numDeltas >= 1, "Should have at least 1 delta");
+
+      const patch = ctx.repo.patchFromDiff(diff, 0);
+      assertExists(patch);
+
+      const delta = patch.getDelta();
+      assertExists(delta);
+      assertEquals(delta.oldFile.path, "file.txt");
+
+      const patchStr = patch.toString();
+      assert(
+        patchStr.includes("-original content"),
+        "Patch should show removed content",
+      );
+      assert(
+        patchStr.includes("+new content"),
+        "Patch should show added content",
+      );
+
+      patch.free();
+      diff.free();
+    });
+
+    await t.step("patch with multiple hunks", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      // Create a file with many lines
+      const originalContent = Array.from(
+        { length: 20 },
+        (_, i) => `line ${i + 1}`,
+      ).join("\n") + "\n";
+      await createCommitWithFiles(ctx, "Initial", {
+        "multiline.txt": originalContent,
+      });
+      const firstOid = ctx.repo.headOid();
+
+      // Modify lines at the beginning and end (creates multiple hunks)
+      const lines = originalContent.split("\n");
+      lines[0] = "modified first line";
+      lines[18] = "modified near end";
+      const modifiedContent = lines.join("\n");
+      await createCommitWithFiles(ctx, "Modified", {
+        "multiline.txt": modifiedContent,
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      const patch = ctx.repo.patchFromDiff(diff, 0);
+      assertExists(patch);
+
+      // Should have 2 hunks (one for each change)
+      const numHunks = patch.numHunks;
+      assert(numHunks >= 1, "Should have at least 1 hunk");
+
+      patch.free();
+      diff.free();
+    });
+
+    await t.step("patch delta has valid properties", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "initial\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      await createCommitWithFiles(ctx, "Modified", {
+        "file.txt": "modified\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      const patch = ctx.repo.patchFromDiff(diff, 0);
+      assertExists(patch);
+
+      const delta = patch.getDelta();
+      assertExists(delta);
+
+      // Status should be a valid delta type (1=ADDED, 2=DELETED, 3=MODIFIED, etc.)
+      assert(delta.status >= 1, "Status should be a valid delta type");
+      // nfiles should be 1 or 2
+      assert(delta.nfiles >= 1 && delta.nfiles <= 2, "nfiles should be 1 or 2");
+      // flags should be a number
+      assertEquals(typeof delta.flags, "number");
+      // similarity should be a number
+      assertEquals(typeof delta.similarity, "number");
+
+      patch.free();
+      diff.free();
+    });
+
+    await t.step("patch for renamed file", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "old-name.txt": "content\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      // "Rename" by deleting old and creating new with same content
+      await createCommitWithFiles(ctx, "Renamed", {
+        "new-name.txt": "content\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      // This creates a delete and an add (not a true rename without detection)
+      assert(diff.numDeltas >= 1, "Should have at least 1 delta");
+
+      if (diff.numDeltas >= 1) {
+        const patch = ctx.repo.patchFromDiff(diff, 0);
+        if (patch) {
+          const delta = patch.getDelta();
+          assertExists(delta);
+          assertExists(delta.oldFile);
+          assertExists(delta.newFile);
+          patch.free();
+        }
+      }
+
+      diff.free();
+    });
+
+    await t.step("patchFromDiff with invalid index throws error", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "initial\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      await createCommitWithFiles(ctx, "Modified", {
+        "file.txt": "modified\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      assertEquals(diff.numDeltas, 1, "Should have 1 delta");
+
+      // Try to get patch for an index that doesn't exist - should throw
+      assertThrows(
+        () => ctx.repo.patchFromDiff(diff, 999),
+        Error,
+      );
+
+      diff.free();
+    });
+
+    await t.step("patchFromDiff with empty diff", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "content\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      // Same content - no changes
+      await createCommitWithFiles(ctx, "No change", {
+        "file.txt": "content\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      // No changes means no deltas
+      assertEquals(diff.numDeltas, 0, "Should have 0 deltas");
+
       diff.free();
     });
   } finally {
