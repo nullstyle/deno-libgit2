@@ -4,7 +4,7 @@
  */
 
 import { assert, assertEquals, assertExists } from "@std/assert";
-import { ApplyLocation, init, shutdown } from "../../mod.ts";
+import { ApplyLocation, Index, init, shutdown } from "../../mod.ts";
 import {
   cleanupTestContext,
   createCommitWithFiles,
@@ -53,7 +53,6 @@ Deno.test("E2E Apply Tests", async (t) => {
 
     await t.step({
       name: "apply diff to index",
-      ignore: true,
       fn: async () => {
         const ctx = await createTestContext({ withInitialCommit: true });
         try {
@@ -69,13 +68,18 @@ Deno.test("E2E Apply Tests", async (t) => {
           });
           const secondOid = ctx.repo.headOid();
 
+          // Reset workdir and index to first commit state
+          await Deno.writeTextFile(`${ctx.repoPath}/file.txt`, "initial\n");
+          const index = Index.fromRepository(ctx.repo);
+          index.add("file.txt");
+          index.write();
+          index.close();
+
           // Get diff between first and second commit
           const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
           assertExists(diff, "Should return a diff");
 
-          // Apply diff to index - note: this applies on top of current index
-          // which already has "modified" content, so this is a no-op
-          // The test just verifies the API works without error
+          // Apply diff to index
           ctx.repo.apply(diff, ApplyLocation.INDEX);
 
           diff.free();
@@ -87,7 +91,6 @@ Deno.test("E2E Apply Tests", async (t) => {
 
     await t.step({
       name: "apply diff to both workdir and index",
-      ignore: true,
       fn: async () => {
         const ctx = await createTestContext({ withInitialCommit: true });
         try {
@@ -103,13 +106,18 @@ Deno.test("E2E Apply Tests", async (t) => {
           });
           const secondOid = ctx.repo.headOid();
 
+          // Reset workdir and index to first commit state
+          await Deno.writeTextFile(`${ctx.repoPath}/file.txt`, "initial\n");
+          const index = Index.fromRepository(ctx.repo);
+          index.add("file.txt");
+          index.write();
+          index.close();
+
           // Get diff between first and second commit
           const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
           assertExists(diff, "Should return a diff");
 
-          // Apply diff to both - note: this applies on top of current state
-          // which already has "modified" content, so this is a no-op
-          // The test just verifies the API works without error
+          // Apply diff to both workdir and index
           ctx.repo.apply(diff, ApplyLocation.BOTH);
 
           // Check that file still has modified content

@@ -3,11 +3,7 @@
  * Tests use real file operations in temporary directories
  */
 
-import {
-  assert,
-  assertEquals,
-  assertExists,
-} from "@std/assert";
+import { assert, assertEquals, assertExists } from "@std/assert";
 import { init, Repository, shutdown } from "../../mod.ts";
 import {
   cleanupTestContext,
@@ -119,7 +115,7 @@ Deno.test("E2E Cherry-pick Tests", async (t) => {
         // Verify the file exists in working directory
         const filePath = `${ctx.repoPath}/new_file.txt`;
         const fileExists = await Deno.stat(filePath).then(() => true).catch(
-          () => false
+          () => false,
         );
         assert(
           fileExists,
@@ -219,7 +215,6 @@ Deno.test("E2E Cherry-pick Tests", async (t) => {
     // The second cherry-pick fails because the first cherry-pick leaves the repo in CHERRYPICK state
     await t.step({
       name: "cherry-pick multiple commits with git commit between",
-      ignore: true,
       fn: async () => {
         const ctx = await createTestContext({ withInitialCommit: true });
         try {
@@ -289,10 +284,10 @@ Deno.test("E2E Cherry-pick Tests", async (t) => {
 
           // Verify both files exist
           const file1Exists = await Deno.stat(`${ctx.repoPath}/feat1.txt`).then(
-            () => true
+            () => true,
           ).catch(() => false);
           const file2Exists = await Deno.stat(`${ctx.repoPath}/feat2.txt`).then(
-            () => true
+            () => true,
           ).catch(() => false);
 
           assert(file1Exists, "First cherry-picked file should exist");
@@ -350,7 +345,7 @@ Deno.test("E2E Cherry-pick Tests", async (t) => {
           // Working directory should NOT have the file yet
           const filePath = `${ctx.repoPath}/feat.txt`;
           const fileExists = await Deno.stat(filePath).then(() => true).catch(
-            () => false
+            () => false,
           );
           assert(
             !fileExists,

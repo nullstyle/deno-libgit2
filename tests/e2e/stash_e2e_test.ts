@@ -163,7 +163,6 @@ Deno.test("E2E Stash Tests", async (t) => {
 
     await t.step({
       name: "stash apply restores changes",
-      ignore: true,
       fn: async () => {
         const ctx = await createTestContext({ withInitialCommit: false });
         try {
@@ -209,7 +208,6 @@ Deno.test("E2E Stash Tests", async (t) => {
 
     await t.step({
       name: "stash pop applies and removes stash",
-      ignore: true,
       fn: async () => {
         const ctx = await createTestContext({ withInitialCommit: false });
         try {
@@ -337,7 +335,6 @@ Deno.test("E2E Stash Tests", async (t) => {
 
     await t.step({
       name: "multiple stashes can be managed independently",
-      ignore: true,
       fn: async () => {
         const ctx = await createTestContext({ withInitialCommit: false });
         try {
