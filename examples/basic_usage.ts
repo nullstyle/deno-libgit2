@@ -23,7 +23,7 @@ import {
 
 // Initialize libgit2
 console.log("Initializing libgit2...");
-init();
+await init();
 
 try {
   // Print version

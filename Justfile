@@ -8,17 +8,9 @@ default:
 test:
     deno test --allow-ffi --allow-read --allow-write --allow-env --allow-run tests/
 
-# Run unit tests only
-test-unit:
-    deno test --allow-ffi --allow-read --allow-write --allow-env tests/repository_test.ts tests/file_history_test.ts
-
-# Run E2E tests only
-test-e2e:
-    deno test --allow-ffi --allow-read --allow-write --allow-env tests/e2e/
-
 # Run tests with coverage
 test-coverage:
-    deno test --allow-ffi --allow-read --allow-write --allow-env --coverage=coverage tests/
+    deno test --allow-ffi --allow-read --allow-write --allow-env --allow-run --coverage=coverage tests/
     deno coverage coverage
 
 # Run the basic usage example

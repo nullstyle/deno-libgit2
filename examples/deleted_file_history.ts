@@ -42,7 +42,7 @@ if (!repoPath || !filePath) {
 }
 
 // Initialize libgit2
-init();
+await init();
 
 try {
   console.log(`\n📂 Repository: ${repoPath}`);

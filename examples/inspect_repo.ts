@@ -31,7 +31,7 @@ if (!repoPath) {
 }
 
 // Initialize libgit2
-init();
+await init();
 
 try {
   const v = version();
