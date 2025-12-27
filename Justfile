@@ -1,9 +1,10 @@
 # Justfile for deno-libgit2
-
 # libgit2 version to build
-libgit2_version := "1.8.4"
+
+libgit2_version := "1.9.2"
 
 # Output directory for built libraries
+
 dist_dir := "dist"
 
 # Default recipe
@@ -113,6 +114,7 @@ build-macos: _ensure-dist
     echo "Built: {{ dist_dir }}/libgit2-darwin-${ARCH}.dylib"
 
 # Build libgit2 for macOS x86_64 (cross-compile on Apple Silicon)
+
 # Note: SSH disabled for cross-compile as libssh2 is architecture-specific
 build-macos-x86_64: _ensure-dist
     #!/usr/bin/env bash
@@ -152,6 +154,7 @@ build-macos-x86_64: _ensure-dist
     echo "Built: {{ dist_dir }}/libgit2-darwin-x86_64.dylib"
 
 # Build libgit2 for macOS aarch64 (Apple Silicon)
+
 # Note: SSH disabled for cross-compile as libssh2 is architecture-specific
 build-macos-aarch64: _ensure-dist
     #!/usr/bin/env bash
