@@ -3,11 +3,11 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { createTestContext } from "./helpers.ts";
-import { init, parseTrailers, prettifyMessage, shutdown } from "../../mod.ts";
+import { createTestContext, setupLibrary } from "./helpers.ts";
+import { parseTrailers, prettifyMessage } from "../../mod.ts";
 
 Deno.test("Message E2E Tests", async (t) => {
-  await init();
+  using _git = await setupLibrary();
 
   await t.step("prettify message - basic cleanup", async () => {
     await using _ctx = await createTestContext();
@@ -217,6 +217,4 @@ Tester-名前: 日本語 <user@example.com>
     // May or may not parse correctly, but should not throw
     assertExists(trailers);
   });
-
-  shutdown();
 });

@@ -5,19 +5,20 @@
 
 import { assertEquals, assertExists } from "@std/assert";
 import {
-  init,
   Repository,
-  shutdown,
   StashApplyFlags,
   StashFlags,
 } from "../../mod.ts";
-import { createCommitWithFiles, createTestContext } from "./helpers.ts";
+import {
+  createCommitWithFiles,
+  createTestContext,
+  setupLibrary,
+} from "./helpers.ts";
 
 Deno.test("E2E Stash Tests", async (t) => {
-  await init();
+  using _git = await setupLibrary();
 
-  try {
-    await t.step("stash save creates a stash entry", async () => {
+  await t.step("stash save creates a stash entry", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
       // Create initial commit
       await createCommitWithFiles(ctx, "Initial commit", {
@@ -348,7 +349,4 @@ Deno.test("E2E Stash Tests", async (t) => {
         assertEquals(content, "change3\n", "Should apply newest stash");
       },
     });
-  } finally {
-    shutdown();
-  }
 });

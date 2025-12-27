@@ -4,13 +4,10 @@
  */
 
 import { assert, assertEquals, assertExists, assertThrows } from "@std/assert";
-import { init, shutdown } from "../../mod.ts";
-import { createCommitWithFiles, createTestContext } from "./helpers.ts";
+import { createCommitWithFiles, createTestContext, setupLibrary } from "./helpers.ts";
 
 Deno.test("E2E Patch Tests", async (t) => {
-  await init();
-
-  try {
+  using _git = await setupLibrary();
     await t.step("create patch from diff", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
       // Create first commit
@@ -742,7 +739,4 @@ Deno.test("E2E Patch Tests", async (t) => {
       patch2.free();
       diff.free();
     });
-  } finally {
-    shutdown();
-  }
 });

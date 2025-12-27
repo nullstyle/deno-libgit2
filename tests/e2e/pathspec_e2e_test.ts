@@ -8,11 +8,15 @@ import {
   assertGreater,
   assertThrows,
 } from "@std/assert";
-import { createCommitWithFiles, createTestContext } from "./helpers.ts";
-import { GitPathspecFlags, Index, init, shutdown } from "../../mod.ts";
+import {
+  createCommitWithFiles,
+  createTestContext,
+  setupLibrary,
+} from "./helpers.ts";
+import { GitPathspecFlags, Index } from "../../mod.ts";
 
 Deno.test("E2E Pathspec Tests", async (t) => {
-  await init();
+  using _git = await setupLibrary();
 
   await t.step("create pathspec and match single path", async () => {
     await using ctx = await createTestContext({ withInitialCommit: true });
@@ -570,6 +574,4 @@ Deno.test("E2E Pathspec Tests", async (t) => {
       "freed",
     );
   });
-
-  shutdown();
 });

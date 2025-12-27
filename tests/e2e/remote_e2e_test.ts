@@ -8,11 +8,10 @@ import {
   assertExists,
   assertNotEquals,
 } from "@std/assert";
-import { createTestContext } from "./helpers.ts";
-import { init, shutdown } from "../../mod.ts";
+import { createTestContext, setupLibrary } from "./helpers.ts";
 
 Deno.test("Remote E2E Tests", async (t) => {
-  await init();
+  using _git = await setupLibrary();
 
   await t.step("list remotes - empty repository", async () => {
     await using ctx = await createTestContext({ withInitialCommit: true });
@@ -241,6 +240,4 @@ Deno.test("Remote E2E Tests", async (t) => {
 
     remote.free();
   });
-
-  shutdown();
 });

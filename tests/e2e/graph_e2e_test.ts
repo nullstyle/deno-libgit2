@@ -12,11 +12,12 @@ import {
   assertFalse,
   assertThrows,
 } from "@std/assert";
-import { init, Repository, shutdown } from "../../mod.ts";
+import { Repository } from "../../mod.ts";
 import {
   createCommitWithFiles,
   createFile,
   createTestContext,
+  setupLibrary,
 } from "./helpers.ts";
 import {
   aheadBehind,
@@ -28,9 +29,7 @@ import { getLibrary } from "../../src/library.ts";
 Deno.test({
   name: "E2E Graph Tests",
   async fn(t) {
-    await init();
-
-    try {
+    using _git = await setupLibrary();
       // AheadBehindResult type tests
       await t.step("AheadBehindResult has correct structure", async () => {
         await using ctx = await createTestContext({ withInitialCommit: true });
@@ -610,8 +609,5 @@ Deno.test({
           );
         },
       );
-    } finally {
-      shutdown();
-    }
   },
 });

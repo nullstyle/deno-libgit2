@@ -20,15 +20,13 @@ import {
   assertNotEquals,
   assertThrows,
 } from "@std/assert";
-import { init, shutdown } from "../../mod.ts";
 import { WorktreePruneFlags } from "../../src/worktree.ts";
-import { createCommitWithFiles, createTestContext } from "./helpers.ts";
+import { createCommitWithFiles, createTestContext, setupLibrary } from "./helpers.ts";
 
 Deno.test("E2E Worktree Tests", async (t) => {
-  await init();
+  using _git = await setupLibrary();
 
-  try {
-    // ==================== List Worktrees Tests ====================
+  // ==================== List Worktrees Tests ====================
 
     await t.step(
       "list worktrees returns empty array for repo without worktrees",
@@ -802,7 +800,4 @@ Deno.test("E2E Worktree Tests", async (t) => {
       worktree.free();
       await Deno.remove(worktreePath, { recursive: true });
     });
-  } finally {
-    shutdown();
-  }
 });

@@ -10,7 +10,6 @@ import {
   createTestContext,
   deleteFile,
   setupLibrary,
-  teardownLibrary,
 } from "./helpers.ts";
 import { Index, Repository } from "../../mod.ts";
 import {
@@ -24,7 +23,7 @@ import { GitError } from "../../src/error.ts";
 Deno.test({
   name: "E2E Index Tests",
   async fn(t) {
-    await setupLibrary();
+    using _git = await setupLibrary();
 
     await t.step("New repository has empty index", async () => {
       await using ctx = await createTestContext();
@@ -601,7 +600,5 @@ Deno.test({
 
       assertFalse(index.hasConflicts);
     });
-
-    teardownLibrary();
   },
 });

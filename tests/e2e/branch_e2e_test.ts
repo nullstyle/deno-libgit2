@@ -8,7 +8,6 @@
 import {
   createCommitWithFiles,
   setupLibrary,
-  teardownLibrary,
   withTestContext,
 } from "./helpers.ts";
 import { assertEquals, assertExists } from "@std/assert";
@@ -16,7 +15,7 @@ import { assertEquals, assertExists } from "@std/assert";
 Deno.test({
   name: "E2E Branch Tests",
   async fn(t) {
-    await setupLibrary();
+    using _git = await setupLibrary();
 
     await t.step("New repository has no branches", async () => {
       await withTestContext({}, (ctx) => {
@@ -171,7 +170,5 @@ Deno.test({
         assertEquals(refC.target, headOid);
       });
     });
-
-    teardownLibrary();
   },
 });

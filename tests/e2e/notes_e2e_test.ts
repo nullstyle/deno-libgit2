@@ -11,13 +11,14 @@
  */
 
 import { assertEquals, assertExists, assertNotEquals } from "@std/assert";
-import { init, shutdown } from "../../mod.ts";
-import { createCommitWithFiles, createTestContext } from "./helpers.ts";
+import {
+  createCommitWithFiles,
+  createTestContext,
+  setupLibrary,
+} from "./helpers.ts";
 
 Deno.test("E2E Notes Tests", async (t) => {
-  await init();
-
-  try {
+  using _git = await setupLibrary();
     // ==================== Create Note Tests ====================
 
     await t.step("create note on commit", async () => {
@@ -932,7 +933,4 @@ With a blank line above`;
       assertEquals(remainingOids.includes(c2), false);
       assertEquals(remainingOids.includes(c3), true);
     });
-  } finally {
-    shutdown();
-  }
 });

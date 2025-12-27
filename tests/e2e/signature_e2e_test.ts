@@ -3,22 +3,19 @@
  */
 
 import { assertExists } from "@std/assert";
-import { createTestContext } from "./helpers.ts";
+import { createTestContext, setupLibrary } from "./helpers.ts";
 import {
   createSignatureNow,
   freeSignature,
   getLibrary,
-  init,
-  shutdown,
   Signature,
   type SignatureInfo,
 } from "../../mod.ts";
 
 Deno.test("E2E Signature Tests", async (t) => {
-  await init();
+  using _git = await setupLibrary();
 
-  try {
-    await t.step(
+  await t.step(
       "Signature.now creates signature with current time",
       async () => {
         await using _ctx = await createTestContext({ withInitialCommit: true });
@@ -268,7 +265,4 @@ Deno.test("E2E Signature Tests", async (t) => {
       assertExists(sig.ptr);
       sig.free();
     });
-  } finally {
-    shutdown();
-  }
 });

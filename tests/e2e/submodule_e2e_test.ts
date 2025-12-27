@@ -9,7 +9,7 @@ import {
   assertFalse,
   assertThrows,
 } from "@std/assert";
-import { init, Repository, shutdown } from "../../mod.ts";
+import { Repository } from "../../mod.ts";
 import {
   GitSubmoduleIgnore,
   GitSubmoduleStatus,
@@ -23,7 +23,11 @@ import {
 } from "../../src/submodule.ts";
 import { getLibrary } from "../../src/library.ts";
 import { GitError } from "../../src/error.ts";
-import { createCommitWithFiles, createTestContext } from "./helpers.ts";
+import {
+  createCommitWithFiles,
+  createTestContext,
+  setupLibrary,
+} from "./helpers.ts";
 
 const decoder = new TextDecoder();
 
@@ -100,10 +104,9 @@ async function addSubmoduleWithGit(
 }
 
 Deno.test("E2E Submodule Tests", async (t) => {
-  await init();
+  using _git = await setupLibrary();
 
-  try {
-    // Tests that don't require git CLI
+  // Tests that don't require git CLI
     await t.step("Submodule class throws on null pointer", () => {
       assertThrows(
         () => new Submodule(null),
@@ -778,7 +781,4 @@ Deno.test("E2E Submodule Tests", async (t) => {
         // Skip tests that require git CLI
       });
     }
-  } finally {
-    shutdown();
-  }
 });

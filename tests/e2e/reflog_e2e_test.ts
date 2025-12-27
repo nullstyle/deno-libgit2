@@ -19,14 +19,17 @@ import {
   assertNotEquals,
   assertThrows,
 } from "@std/assert";
-import { init, Repository, shutdown } from "../../mod.ts";
-import { createCommitWithFiles, createTestContext } from "./helpers.ts";
+import { Repository } from "../../mod.ts";
+import {
+  createCommitWithFiles,
+  createTestContext,
+  setupLibrary,
+} from "./helpers.ts";
 
 Deno.test("E2E Reflog Tests", async (t) => {
-  await init();
+  using _git = await setupLibrary();
 
-  try {
-    // ==================== Read Reflog Tests ====================
+  // ==================== Read Reflog Tests ====================
 
     await t.step("read reflog for HEAD", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
@@ -871,7 +874,4 @@ Deno.test("E2E Reflog Tests", async (t) => {
         reflog.free();
       }
     });
-  } finally {
-    shutdown();
-  }
 });

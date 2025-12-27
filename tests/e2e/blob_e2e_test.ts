@@ -11,7 +11,11 @@ import {
   assertThrows,
 } from "@std/assert";
 
-import { createCommitWithFiles, createTestContext } from "./helpers.ts";
+import {
+  createCommitWithFiles,
+  createTestContext,
+  setupLibrary,
+} from "./helpers.ts";
 
 import {
   Blob,
@@ -22,15 +26,13 @@ import {
   getFileContent,
   getFileRawAtCommit,
   getFileRawContent,
-  init,
-  shutdown,
   Tree,
 } from "../../mod.ts";
 
 Deno.test({
   name: "E2E Blob Tests",
   async fn(t) {
-    await init();
+    using _git = await setupLibrary();
 
     await t.step("Blob.lookup retrieves blob by OID", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
@@ -558,8 +560,6 @@ Deno.test({
       // Git content-addresses blobs, so same content = same OID
       assertEquals(entry1.oid, entry2.oid, "Same content should have same OID");
     });
-
-    shutdown();
   },
   sanitizeResources: false,
   sanitizeOps: false,

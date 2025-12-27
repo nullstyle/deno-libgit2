@@ -4,13 +4,15 @@
  */
 
 import { assert, assertEquals, assertExists } from "@std/assert";
-import { init, Repository, shutdown } from "../../mod.ts";
-import { createCommitWithFiles, createTestContext } from "./helpers.ts";
+import { Repository } from "../../mod.ts";
+import {
+  createCommitWithFiles,
+  createTestContext,
+  setupLibrary,
+} from "./helpers.ts";
 
 Deno.test("E2E Cherry-pick Tests", async (t) => {
-  await init();
-
-  try {
+  using _git = await setupLibrary();
     await t.step("cherry-pick commit to index", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
 
@@ -330,7 +332,4 @@ Deno.test("E2E Cherry-pick Tests", async (t) => {
         );
       },
     );
-  } finally {
-    shutdown();
-  }
 });

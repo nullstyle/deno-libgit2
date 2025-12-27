@@ -15,7 +15,6 @@ import {
   createFile,
   createTestContext,
   setupLibrary,
-  teardownLibrary,
   withTestContext,
 } from "./helpers.ts";
 import {
@@ -32,7 +31,7 @@ import { getLibrary } from "../../src/library.ts";
 Deno.test({
   name: "E2E Merge Tests",
   async fn(t) {
-    await setupLibrary();
+    using _git = await setupLibrary();
 
     // ==================== AnnotatedCommit Tests ====================
 
@@ -1667,7 +1666,5 @@ Deno.test({
         });
       },
     );
-
-    teardownLibrary();
   },
 });

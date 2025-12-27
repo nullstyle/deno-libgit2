@@ -10,11 +10,11 @@
  */
 
 import { assertEquals, assertExists, assertNotEquals } from "@std/assert";
-import { createFile, createTestContext } from "./helpers.ts";
-import { init, Mailmap, Repository, shutdown } from "../../mod.ts";
+import { createFile, createTestContext, setupLibrary } from "./helpers.ts";
+import { Mailmap, Repository } from "../../mod.ts";
 
 Deno.test("Mailmap E2E Tests", async (t) => {
-  await init();
+  using _git = await setupLibrary();
 
   // ==================== Creation Tests ====================
 
@@ -558,6 +558,4 @@ Proper Name <proper@example.com> Exact Name <exact@example.com>
     assertExists(result.name);
     assertExists(result.email);
   });
-
-  shutdown();
 });

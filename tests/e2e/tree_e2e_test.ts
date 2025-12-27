@@ -17,7 +17,6 @@ import {
   assertNotEquals,
   assertThrows,
 } from "@std/assert";
-import { init, shutdown } from "../../mod.ts";
 import {
   getTreeEntryByPath,
   GitFileMode,
@@ -25,13 +24,12 @@ import {
   treeHasPath,
 } from "../../src/tree.ts";
 import { GitObjectType } from "../../src/types.ts";
-import { createCommitWithFiles, createTestContext } from "./helpers.ts";
+import { createCommitWithFiles, createTestContext, setupLibrary } from "./helpers.ts";
 
 Deno.test("E2E Tree Tests", async (t) => {
-  await init();
+  using _git = await setupLibrary();
 
-  try {
-    // ==================== Tree Lookup Tests ====================
+  // ==================== Tree Lookup Tests ====================
 
     await t.step("Tree.lookup retrieves tree by OID", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
@@ -786,7 +784,4 @@ Deno.test("E2E Tree Tests", async (t) => {
       assertEquals(names.includes("apple.txt"), true);
       assertEquals(names.includes("zebra.txt"), true);
     });
-  } finally {
-    shutdown();
-  }
 });

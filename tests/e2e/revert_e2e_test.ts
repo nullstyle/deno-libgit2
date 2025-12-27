@@ -4,14 +4,16 @@
  */
 
 import { assert, assertEquals, assertExists } from "@std/assert";
-import { init, shutdown } from "../../mod.ts";
-import { createCommitWithFiles, createTestContext } from "./helpers.ts";
+import {
+  createCommitWithFiles,
+  createTestContext,
+  setupLibrary,
+} from "./helpers.ts";
 
 Deno.test("E2E Revert Tests", async (t) => {
-  await init();
+  using _git = await setupLibrary();
 
-  try {
-    await t.step("revert commit to index", async () => {
+  await t.step("revert commit to index", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
       // Create initial commit
       await createCommitWithFiles(ctx, "Initial", {
@@ -168,7 +170,4 @@ Deno.test("E2E Revert Tests", async (t) => {
 
       index.free();
     });
-  } finally {
-    shutdown();
-  }
 });

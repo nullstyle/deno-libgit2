@@ -5,7 +5,7 @@
  * and performing real file operations for integration testing.
  */
 
-import { createCommit, Index, init, Repository, shutdown } from "../../mod.ts";
+import { createCommit, type GitLibrary, Index, initGit, Repository } from "../../mod.ts";
 
 /** Options for creating a test context */
 export interface TestContextOptions {
@@ -272,16 +272,16 @@ export async function createCommitWithDeletions(
 }
 
 /**
- * Sets up the libgit2 library for tests
+ * Sets up the libgit2 library for tests.
+ * Returns a GitLibrary handle that should be used with `using` for automatic cleanup.
  * Note: Tests should be run with DENO_LIBGIT2_USE_SYSTEM=1 to use system-installed libgit2
+ *
+ * @example
+ * ```ts
+ * using git = await setupLibrary();
+ * // Library is automatically shut down when scope exits
+ * ```
  */
-export async function setupLibrary(): Promise<void> {
-  await init();
-}
-
-/**
- * Tears down the libgit2 library after tests
- */
-export function teardownLibrary(): void {
-  shutdown();
+export async function setupLibrary(): Promise<GitLibrary> {
+  return await initGit();
 }

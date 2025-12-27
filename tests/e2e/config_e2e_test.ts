@@ -6,8 +6,7 @@
  */
 
 import { assert, assertEquals, assertExists, assertFalse } from "@std/assert";
-import { createTestContext } from "./helpers.ts";
-import { init, shutdown } from "../../mod.ts";
+import { createTestContext, setupLibrary } from "./helpers.ts";
 import {
   Config,
   type ConfigEntry,
@@ -19,9 +18,7 @@ import { getLibrary } from "../../src/library.ts";
 Deno.test({
   name: "E2E Config Tests",
   async fn(t) {
-    await init();
-
-    try {
+    using _git = await setupLibrary();
       // GitConfigLevel enum tests
       await t.step("GitConfigLevel enum has correct values", () => {
         assertEquals(GitConfigLevel.PROGRAMDATA, 1);
@@ -615,8 +612,5 @@ Deno.test({
         using snapshot = config.snapshot();
         assertEquals(snapshot.getString("test.longvalue"), longValue);
       });
-    } finally {
-      shutdown();
-    }
   },
 });

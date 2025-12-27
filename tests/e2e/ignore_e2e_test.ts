@@ -3,11 +3,10 @@
  */
 
 import { assertEquals } from "@std/assert";
-import { createTestContext } from "./helpers.ts";
-import { init, shutdown } from "../../mod.ts";
+import { createTestContext, setupLibrary } from "./helpers.ts";
 
 Deno.test("E2E Ignore Tests", async (t) => {
-  await init();
+  using _git = await setupLibrary();
 
   await t.step("check if path is ignored with no .gitignore", async () => {
     await using ctx = await createTestContext({ withInitialCommit: true });
@@ -159,6 +158,4 @@ Deno.test("E2E Ignore Tests", async (t) => {
     assertEquals(ctx.repo.pathIsIgnored("nonexistent.log"), true);
     assertEquals(ctx.repo.pathIsIgnored("nonexistent.txt"), false);
   });
-
-  shutdown();
 });

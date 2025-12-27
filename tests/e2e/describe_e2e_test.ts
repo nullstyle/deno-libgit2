@@ -9,13 +9,15 @@ import {
   assertExists,
   assertStringIncludes,
 } from "@std/assert";
-import { DescribeStrategy, init, Repository, shutdown } from "../../mod.ts";
-import { createCommitWithFiles, createTestContext } from "./helpers.ts";
+import { DescribeStrategy, Repository } from "../../mod.ts";
+import {
+  createCommitWithFiles,
+  createTestContext,
+  setupLibrary,
+} from "./helpers.ts";
 
 Deno.test("E2E Describe Tests", async (t) => {
-  await init();
-
-  try {
+  using _git = await setupLibrary();
     await t.step("describe commit with annotated tag", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
       await createCommitWithFiles(ctx, "Initial commit", {
@@ -287,7 +289,4 @@ Deno.test("E2E Describe Tests", async (t) => {
       assertExists(description, "Should return description");
       assertEquals(description, "v1.0.0", "Should find tag");
     });
-  } finally {
-    shutdown();
-  }
 });

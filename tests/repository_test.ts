@@ -3,13 +3,14 @@
  */
 
 import { assertEquals, assertExists, assertThrows } from "@std/assert";
-import { GitError, init, Repository, shutdown } from "../mod.ts";
+import { GitError, type GitLibrary, initGit, Repository } from "../mod.ts";
 
 // Test setup and teardown
 let testRepoPath: string;
+let _git: GitLibrary;
 
 async function setup() {
-  await init();
+  _git = await initGit();
   // Create a temporary directory for test repository
   testRepoPath = Deno.makeTempDirSync({ prefix: "libgit2_test_" });
 }
@@ -20,7 +21,7 @@ function teardown() {
   } catch {
     // Ignore cleanup errors
   }
-  shutdown();
+  _git.shutdown();
 }
 
 Deno.test({

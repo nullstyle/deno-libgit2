@@ -20,9 +20,13 @@ import {
   assertGreater,
   assertThrows,
 } from "@std/assert";
-import { init, Repository, shutdown } from "../../mod.ts";
+import { Repository } from "../../mod.ts";
 import { GitRebaseOperationType } from "../../src/rebase.ts";
-import { createCommitWithFiles, createTestContext } from "./helpers.ts";
+import {
+  createCommitWithFiles,
+  createTestContext,
+  setupLibrary,
+} from "./helpers.ts";
 
 /**
  * Helper to create a standard rebase scenario:
@@ -70,10 +74,9 @@ async function setupRebaseScenario(
 }
 
 Deno.test("E2E Rebase Tests", async (t) => {
-  await init();
+  using _git = await setupLibrary();
 
-  try {
-    // ==================== Init Rebase Tests ====================
+  // ==================== Init Rebase Tests ====================
 
     await t.step("init rebase with two branches", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
@@ -844,7 +847,4 @@ Deno.test("E2E Rebase Tests", async (t) => {
         rebase.free();
       }
     });
-  } finally {
-    shutdown();
-  }
 });

@@ -13,19 +13,20 @@ import {
   findFileHistory,
   getFileAtHead,
   getFileContent,
+  type GitLibrary,
   Index,
-  init,
+  initGit,
   Repository,
-  shutdown,
   Tree,
   treeHasPath,
 } from "../mod.ts";
 
 // Test setup and teardown
 let testRepoPath: string;
+let _git: GitLibrary;
 
 async function setup() {
-  await init();
+  _git = await initGit();
   testRepoPath = Deno.makeTempDirSync({ prefix: "libgit2_file_test_" });
 }
 
@@ -35,7 +36,7 @@ function teardown() {
   } catch {
     // Ignore cleanup errors
   }
-  shutdown();
+  _git.shutdown();
 }
 
 /**

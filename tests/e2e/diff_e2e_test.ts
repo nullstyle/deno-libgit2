@@ -11,12 +11,12 @@ import {
   assertFalse,
   assertThrows,
 } from "@std/assert";
-import { init, shutdown } from "../../mod.ts";
 import {
   createCommitWithDeletions,
   createCommitWithFiles,
   createFile,
   createTestContext,
+  setupLibrary,
 } from "./helpers.ts";
 import {
   Diff,
@@ -32,9 +32,7 @@ import { getLibrary } from "../../src/library.ts";
 Deno.test({
   name: "E2E Diff Tests",
   async fn(t) {
-    await init();
-
-    try {
+    using _git = await setupLibrary();
       // Enum tests
       await t.step("DiffDeltaType enum has correct values", () => {
         assertEquals(DiffDeltaType.UNMODIFIED, 0);
@@ -739,8 +737,5 @@ Deno.test({
         );
         assertEquals(delta.oldFile.path, "todelete.txt");
       });
-    } finally {
-      shutdown();
-    }
   },
 });

@@ -20,7 +20,7 @@ import {
   wrapError,
 } from "../../src/error.ts";
 import { GitErrorClass, GitErrorCode } from "../../src/types.ts";
-import { init, shutdown } from "../../mod.ts";
+import { setupLibrary } from "./helpers.ts";
 
 Deno.test({
   name: "E2E Error Tests",
@@ -187,173 +187,161 @@ Deno.test({
 
     // checkError with library (needs init)
     await t.step("checkError with library instance", async (t) => {
-      await init();
-      try {
-        const { getLibrary } = await import("../../src/library.ts");
-        const lib = getLibrary();
+      using _git = await setupLibrary();
+      const { getLibrary } = await import("../../src/library.ts");
+      const lib = getLibrary();
 
-        await t.step("does nothing for non-negative codes", () => {
-          // Should not throw
-          checkError(lib, 0, "Success");
-          checkError(lib, 1, "Success");
-        });
+      await t.step("does nothing for non-negative codes", () => {
+        // Should not throw
+        checkError(lib, 0, "Success");
+        checkError(lib, 1, "Success");
+      });
 
-        await t.step("throws GitError for negative codes", () => {
-          assertThrows(
-            () => checkError(lib, -1, "Failed operation"),
-            GitError,
-          );
-        });
-
-        await t.step(
-          "includes operation name in error when error is set",
-          () => {
-            // When no error is actually set in libgit2, the error message
-            // comes from git_error_last which returns the last real error or "no error"
-            try {
-              checkError(lib, -1, "my operation");
-            } catch (e) {
-              const error = e as GitError;
-              // The error was thrown as expected
-              assertEquals(error instanceof GitError, true);
-              assertEquals(error.code, GitErrorCode.ERROR);
-            }
-          },
+      await t.step("throws GitError for negative codes", () => {
+        assertThrows(
+          () => checkError(lib, -1, "Failed operation"),
+          GitError,
         );
-      } finally {
-        shutdown();
-      }
+      });
+
+      await t.step(
+        "includes operation name in error when error is set",
+        () => {
+          // When no error is actually set in libgit2, the error message
+          // comes from git_error_last which returns the last real error or "no error"
+          try {
+            checkError(lib, -1, "my operation");
+          } catch (e) {
+            const error = e as GitError;
+            // The error was thrown as expected
+            assertEquals(error instanceof GitError, true);
+            assertEquals(error.code, GitErrorCode.ERROR);
+          }
+        },
+      );
     });
 
     // getLastError function tests
     await t.step("getLastError with library", async (t) => {
-      await init();
-      try {
-        const { getLibrary } = await import("../../src/library.ts");
-        const lib = getLibrary();
+      using _git = await setupLibrary();
+      const { getLibrary } = await import("../../src/library.ts");
+      const lib = getLibrary();
 
-        await t.step(
-          "returns GitError with default message when no error set",
-          () => {
-            // Clear any previous errors by calling a successful operation
-            lib.symbols.git_libgit2_version(
-              Deno.UnsafePointer.of(new Uint8Array(4))!,
-              Deno.UnsafePointer.of(new Uint8Array(4))!,
-              Deno.UnsafePointer.of(new Uint8Array(4))!,
-            );
-
-            const error = getLastError(lib, "Default error message");
-            assertExists(error);
-            assertEquals(error instanceof GitError, true);
-          },
-        );
-
-        await t.step("uses provided error code", () => {
-          const error = getLastError(
-            lib,
-            "Custom message",
-            GitErrorCode.ENOTFOUND,
+      await t.step(
+        "returns GitError with default message when no error set",
+        () => {
+          // Clear any previous errors by calling a successful operation
+          lib.symbols.git_libgit2_version(
+            Deno.UnsafePointer.of(new Uint8Array(4))!,
+            Deno.UnsafePointer.of(new Uint8Array(4))!,
+            Deno.UnsafePointer.of(new Uint8Array(4))!,
           );
-          assertEquals(error.code, GitErrorCode.ENOTFOUND);
-        });
 
-        await t.step("defaults to ERROR code", () => {
-          const error = getLastError(lib, "Default code test");
-          assertEquals(error.code, GitErrorCode.ERROR);
-        });
-      } finally {
-        shutdown();
-      }
+          const error = getLastError(lib, "Default error message");
+          assertExists(error);
+          assertEquals(error instanceof GitError, true);
+        },
+      );
+
+      await t.step("uses provided error code", () => {
+        const error = getLastError(
+          lib,
+          "Custom message",
+          GitErrorCode.ENOTFOUND,
+        );
+        assertEquals(error.code, GitErrorCode.ENOTFOUND);
+      });
+
+      await t.step("defaults to ERROR code", () => {
+        const error = getLastError(lib, "Default code test");
+        assertEquals(error.code, GitErrorCode.ERROR);
+      });
     });
 
     // wrapError function tests
     await t.step("wrapError with library", async (t) => {
-      await init();
-      try {
-        const { getLibrary } = await import("../../src/library.ts");
-        const lib = getLibrary();
+      using _git = await setupLibrary();
+      const { getLibrary } = await import("../../src/library.ts");
+      const lib = getLibrary();
 
-        await t.step("returns result when function succeeds", () => {
-          const result = wrapError(lib, "test operation", () => {
-            return "success";
+      await t.step("returns result when function succeeds", () => {
+        const result = wrapError(lib, "test operation", () => {
+          return "success";
+        });
+        assertEquals(result, "success");
+      });
+
+      await t.step("returns result for different types", () => {
+        const numberResult = wrapError(lib, "number op", () => 42);
+        assertEquals(numberResult, 42);
+
+        const objectResult = wrapError(lib, "object op", () => ({
+          key: "value",
+        }));
+        assertEquals(objectResult.key, "value");
+
+        const arrayResult = wrapError(lib, "array op", () => [1, 2, 3]);
+        assertEquals(arrayResult, [1, 2, 3]);
+      });
+
+      await t.step("re-throws GitError unchanged", () => {
+        const originalError = new GitError(
+          "Original error",
+          GitErrorCode.ENOTFOUND,
+          GitErrorClass.OBJECT,
+        );
+
+        try {
+          wrapError(lib, "wrapped operation", () => {
+            throw originalError;
           });
-          assertEquals(result, "success");
-        });
+        } catch (e) {
+          const error = e as GitError;
+          assertEquals(error, originalError);
+          assertEquals(error.message, "Original error");
+          assertEquals(error.code, GitErrorCode.ENOTFOUND);
+          assertEquals(error.errorClass, GitErrorClass.OBJECT);
+        }
+      });
 
-        await t.step("returns result for different types", () => {
-          const numberResult = wrapError(lib, "number op", () => 42);
-          assertEquals(numberResult, 42);
+      await t.step("wraps non-GitError in GitError", () => {
+        try {
+          wrapError(lib, "my operation", () => {
+            throw new Error("Standard error");
+          });
+        } catch (e) {
+          const error = e as GitError;
+          assertEquals(error instanceof GitError, true);
+          assertMatch(error.message, /my operation/);
+          assertMatch(error.message, /Standard error/);
+          assertEquals(error.code, GitErrorCode.ERROR);
+        }
+      });
 
-          const objectResult = wrapError(lib, "object op", () => ({
-            key: "value",
-          }));
-          assertEquals(objectResult.key, "value");
+      await t.step("wraps string errors in GitError", () => {
+        try {
+          wrapError(lib, "string error op", () => {
+            throw "String error message";
+          });
+        } catch (e) {
+          const error = e as GitError;
+          assertEquals(error instanceof GitError, true);
+          assertMatch(error.message, /string error op/);
+          assertMatch(error.message, /String error message/);
+        }
+      });
 
-          const arrayResult = wrapError(lib, "array op", () => [1, 2, 3]);
-          assertEquals(arrayResult, [1, 2, 3]);
-        });
-
-        await t.step("re-throws GitError unchanged", () => {
-          const originalError = new GitError(
-            "Original error",
-            GitErrorCode.ENOTFOUND,
-            GitErrorClass.OBJECT,
-          );
-
-          try {
-            wrapError(lib, "wrapped operation", () => {
-              throw originalError;
-            });
-          } catch (e) {
-            const error = e as GitError;
-            assertEquals(error, originalError);
-            assertEquals(error.message, "Original error");
-            assertEquals(error.code, GitErrorCode.ENOTFOUND);
-            assertEquals(error.errorClass, GitErrorClass.OBJECT);
-          }
-        });
-
-        await t.step("wraps non-GitError in GitError", () => {
-          try {
-            wrapError(lib, "my operation", () => {
-              throw new Error("Standard error");
-            });
-          } catch (e) {
-            const error = e as GitError;
-            assertEquals(error instanceof GitError, true);
-            assertMatch(error.message, /my operation/);
-            assertMatch(error.message, /Standard error/);
-            assertEquals(error.code, GitErrorCode.ERROR);
-          }
-        });
-
-        await t.step("wraps string errors in GitError", () => {
-          try {
-            wrapError(lib, "string error op", () => {
-              throw "String error message";
-            });
-          } catch (e) {
-            const error = e as GitError;
-            assertEquals(error instanceof GitError, true);
-            assertMatch(error.message, /string error op/);
-            assertMatch(error.message, /String error message/);
-          }
-        });
-
-        await t.step("wraps undefined/null errors", () => {
-          try {
-            wrapError(lib, "undefined error op", () => {
-              throw undefined;
-            });
-          } catch (e) {
-            const error = e as GitError;
-            assertEquals(error instanceof GitError, true);
-            assertMatch(error.message, /undefined error op/);
-          }
-        });
-      } finally {
-        shutdown();
-      }
+      await t.step("wraps undefined/null errors", () => {
+        try {
+          wrapError(lib, "undefined error op", () => {
+            throw undefined;
+          });
+        } catch (e) {
+          const error = e as GitError;
+          assertEquals(error instanceof GitError, true);
+          assertMatch(error.message, /undefined error op/);
+        }
+      });
     });
 
     // errorMessages and getErrorMessage tests

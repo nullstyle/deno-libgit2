@@ -12,7 +12,6 @@ import {
   fileExists,
   removeTempDir,
   setupLibrary,
-  teardownLibrary,
   withTestContext,
 } from "./helpers.ts";
 import { GitRepositoryOpenFlags, Index, Repository } from "../../mod.ts";
@@ -25,11 +24,10 @@ import {
 } from "@std/assert";
 import { GitBranchType } from "../../src/types.ts";
 
-// Setup and teardown
 Deno.test({
   name: "E2E Repository Tests",
   async fn(t) {
-    await setupLibrary();
+    using _git = await setupLibrary();
 
     await t.step(
       "Repository.init creates a working git repository",
@@ -740,7 +738,5 @@ Deno.test({
         await removeTempDir(tempDir);
       }
     });
-
-    teardownLibrary();
   },
 });

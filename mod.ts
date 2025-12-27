@@ -2,16 +2,13 @@
 export {
   getLibrary,
   type GitLibrary,
-  init,
   initGit,
   type InitOptions,
   isLibraryLoaded,
   LIBGIT2_VERSION,
   loadLibrary,
-  shutdown,
   version,
   versionString,
-  withLibrary,
 } from "./src/library.ts";
 
 // Types and enums

@@ -3,11 +3,11 @@
  */
 
 import { assert, assertEquals } from "@std/assert";
-import { createTestContext } from "./helpers.ts";
-import { GitAttrValue, init, shutdown } from "../../mod.ts";
+import { createTestContext, setupLibrary } from "./helpers.ts";
+import { GitAttrValue } from "../../mod.ts";
 
 Deno.test("E2E Attr Tests", async (t) => {
-  await init();
+  using _git = await setupLibrary();
 
   await t.step("get attribute for file with no attributes", async () => {
     await using ctx = await createTestContext({ withInitialCommit: true });
@@ -206,6 +206,4 @@ Deno.test("E2E Attr Tests", async (t) => {
     const value = ctx.repo.getAttr("nonexistent.txt", "text");
     assertEquals(value.type, GitAttrValue.TRUE);
   });
-
-  shutdown();
 });

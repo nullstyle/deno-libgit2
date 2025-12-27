@@ -11,20 +11,22 @@ import {
   assertThrows,
 } from "@std/assert";
 
-import { createCommitWithFiles, createTestContext } from "./helpers.ts";
+import {
+  createCommitWithFiles,
+  createTestContext,
+  setupLibrary,
+} from "./helpers.ts";
 
 import {
   type BlameHunk,
   GitBlameFlags,
-  init,
   Repository,
-  shutdown,
 } from "../../mod.ts";
 
 Deno.test({
   name: "E2E Blame Tests",
   async fn(t) {
-    await init();
+    using _git = await setupLibrary();
 
     await t.step(
       "blame file shows commit that introduced each line",
@@ -766,8 +768,6 @@ Deno.test({
       assertGreater(blame.hunkCount, 0);
       assertEquals(blame.lineCount, 3);
     });
-
-    shutdown();
   },
   sanitizeResources: false,
   sanitizeOps: false,

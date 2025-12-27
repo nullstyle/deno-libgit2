@@ -10,7 +10,6 @@ import {
   createCommitWithDeletions,
   createCommitWithFiles,
   setupLibrary,
-  teardownLibrary,
   withTestContext,
 } from "./helpers.ts";
 import {
@@ -30,7 +29,7 @@ import { assertEquals, assertExists } from "@std/assert";
 Deno.test({
   name: "E2E File History Tests",
   async fn(t) {
-    await setupLibrary();
+    using _git = await setupLibrary();
 
     await t.step("Tree.hasPath detects existing file", async () => {
       await withTestContext({}, async (ctx) => {
@@ -451,7 +450,5 @@ Deno.test({
         assertEquals(messages[2].includes("Create"), true);
       });
     });
-
-    teardownLibrary();
   },
 });

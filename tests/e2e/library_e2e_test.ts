@@ -16,14 +16,13 @@ import {
 } from "@std/assert";
 import {
   getLibrary,
-  init,
   initGit,
   isLibraryLoaded,
-  shutdown,
   version,
   versionString,
-  withLibrary,
 } from "../../mod.ts";
+// Internal functions for testing internals - not part of public API
+import { init, shutdown, withLibrary } from "../../src/library.ts";
 import { GitError } from "../../src/error.ts";
 
 Deno.test({

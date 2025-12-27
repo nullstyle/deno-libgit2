@@ -21,15 +21,14 @@ import {
   assertThrows,
 } from "@std/assert";
 
-import { createCommitWithFiles, createTestContext } from "./helpers.ts";
+import { createCommitWithFiles, createTestContext, setupLibrary } from "./helpers.ts";
 
-import { init, shutdown, Tree } from "../../mod.ts";
+import { Tree } from "../../mod.ts";
 
 Deno.test("E2E Tag Tests", async (t) => {
-  await init();
+  using _git = await setupLibrary();
 
-  try {
-    // ==================== Create Annotated Tag Tests ====================
+  // ==================== Create Annotated Tag Tests ====================
 
     await t.step("create annotated tag on commit", async () => {
       await using ctx = await createTestContext({ withInitialCommit: false });
@@ -1275,7 +1274,4 @@ This is a major release with:
       const hexRegex = /^[0-9a-f]{40}$/;
       assert(hexRegex.test(tags[0].oid));
     });
-  } finally {
-    shutdown();
-  }
 });

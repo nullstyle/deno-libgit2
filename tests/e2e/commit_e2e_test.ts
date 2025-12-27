@@ -10,7 +10,6 @@ import {
   createFile,
   createTestContext,
   setupLibrary,
-  teardownLibrary,
 } from "./helpers.ts";
 import {
   assert,
@@ -33,11 +32,10 @@ import {
 Deno.test({
   name: "E2E Commit Tests",
   async fn(t) {
-    await setupLibrary();
+    using _git = await setupLibrary();
 
-    try {
-      // createSignature tests
-      await t.step("createSignature with time and offset", async () => {
+    // createSignature tests
+    await t.step("createSignature with time and offset", async () => {
         await using ctx = await createTestContext({ withInitialCommit: true });
 
         const input: SignatureInput = {
@@ -645,8 +643,5 @@ Body paragraph two.`;
           assertEquals(commits[0].parents[0], commit1);
         },
       );
-    } finally {
-      teardownLibrary();
-    }
   },
 });

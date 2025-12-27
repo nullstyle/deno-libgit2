@@ -3,11 +3,15 @@
  */
 
 import { assert, assertEquals, assertExists, assertThrows } from "@std/assert";
-import { createCommitWithFiles, createTestContext } from "./helpers.ts";
-import { GitObjectType, init, shutdown, Tree } from "../../mod.ts";
+import {
+  createCommitWithFiles,
+  createTestContext,
+  setupLibrary,
+} from "./helpers.ts";
+import { GitObjectType, Tree } from "../../mod.ts";
 
 Deno.test("ODB E2E Tests", async (t) => {
-  await init();
+  using _git = await setupLibrary();
 
   await t.step("get odb from repository", async () => {
     await using ctx = await createTestContext({ withInitialCommit: true });
@@ -438,6 +442,4 @@ Deno.test("ODB E2E Tests", async (t) => {
     }
     // odb is automatically disposed here
   });
-
-  shutdown();
 });

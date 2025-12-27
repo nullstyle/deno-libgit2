@@ -4,17 +4,16 @@
  */
 
 import { assert, assertEquals, assertExists } from "@std/assert";
-import { ApplyLocation, Index, init, shutdown } from "../../mod.ts";
+import { ApplyLocation, Index } from "../../mod.ts";
 import {
   createCommitWithFiles,
   createTestContext,
   readFile,
+  setupLibrary,
 } from "./helpers.ts";
 
 Deno.test("E2E Apply Tests", async (t) => {
-  await init();
-
-  try {
+  using _git = await setupLibrary();
     await t.step("apply diff to workdir", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
 
@@ -175,7 +174,4 @@ Deno.test("E2E Apply Tests", async (t) => {
       const content = await readFile(`${ctx.repoPath}/new.txt`);
       assertEquals(content, "new content\n", "New file should be created");
     });
-  } finally {
-    shutdown();
-  }
 });
