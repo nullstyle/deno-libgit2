@@ -344,3 +344,75 @@ export async function withLibrary<T>(
     shutdown();
   }
 }
+
+/**
+ * Resource handle returned by initGit() for use with `using` syntax.
+ * Automatically calls shutdown() when disposed.
+ */
+export interface GitLibrary extends Disposable {
+  /**
+   * The libgit2 version information
+   */
+  readonly version: { major: number; minor: number; revision: number };
+
+  /**
+   * The libgit2 version as a string
+   */
+  readonly versionString: string;
+
+  /**
+   * Manually shutdown the library (also called automatically on dispose)
+   */
+  shutdown(): number;
+}
+
+/**
+ * Initialize the libgit2 library with support for explicit resource management.
+ * Use with `using` syntax for automatic cleanup.
+ *
+ * By default, downloads pre-built binaries from GitHub releases for macOS and Linux.
+ * Use `{ preferSystemLibGit2: true }` to use system-installed libgit2 instead.
+ *
+ * @param options - Optional path to the library file, FetchOptions, or InitOptions
+ * @returns A GitLibrary handle that can be used with `using`
+ *
+ * @example
+ * // Automatic cleanup with `using`
+ * using git = await initGit();
+ * using repo = Repository.open(".");
+ * console.log("HEAD:", repo.headOid());
+ * // Library is automatically shut down when `git` goes out of scope
+ *
+ * @example
+ * // Use system-installed libgit2
+ * using git = await initGit({ preferSystemLibGit2: true });
+ *
+ * @example
+ * // Use a specific library path
+ * using git = await initGit("/custom/path/to/libgit2.dylib");
+ */
+export async function initGit(
+  options?: string | FetchOptions | InitOptions,
+): Promise<GitLibrary> {
+  await init(options);
+
+  const lib: GitLibrary = {
+    get version() {
+      return version();
+    },
+
+    get versionString() {
+      return versionString();
+    },
+
+    shutdown() {
+      return shutdown();
+    },
+
+    [Symbol.dispose]() {
+      shutdown();
+    },
+  };
+
+  return lib;
+}

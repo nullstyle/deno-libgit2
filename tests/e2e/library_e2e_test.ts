@@ -17,6 +17,7 @@ import {
 import {
   getLibrary,
   init,
+  initGit,
   isLibraryLoaded,
   shutdown,
   version,
@@ -446,6 +447,88 @@ Deno.test({
         } finally {
           shutdown();
         }
+      },
+    );
+
+    await t.step(
+      "initGit() returns GitLibrary with version properties",
+      async () => {
+        // Ensure clean state
+        while (isLibraryLoaded()) {
+          shutdown();
+        }
+
+        using git = await initGit();
+
+        assertEquals(
+          isLibraryLoaded(),
+          true,
+          "Library should be loaded after initGit()",
+        );
+
+        assertExists(git.version, "GitLibrary should have version property");
+        assertExists(
+          git.versionString,
+          "GitLibrary should have versionString property",
+        );
+        assertMatch(
+          git.versionString,
+          /^\d+\.\d+\.\d+$/,
+          "versionString should match X.Y.Z format",
+        );
+        assertEquals(
+          git.versionString,
+          `${git.version.major}.${git.version.minor}.${git.version.revision}`,
+          "versionString should match version object",
+        );
+      },
+    );
+
+    await t.step(
+      "initGit() shuts down automatically via Symbol.dispose",
+      async () => {
+        // Ensure clean state
+        while (isLibraryLoaded()) {
+          shutdown();
+        }
+
+        {
+          using _git = await initGit();
+          assertEquals(
+            isLibraryLoaded(),
+            true,
+            "Library should be loaded inside using block",
+          );
+        }
+
+        assertFalse(
+          isLibraryLoaded(),
+          "Library should be unloaded after using block ends",
+        );
+      },
+    );
+
+    await t.step(
+      "initGit() shutdown() method works manually",
+      async () => {
+        // Ensure clean state
+        while (isLibraryLoaded()) {
+          shutdown();
+        }
+
+        const git = await initGit();
+        assertEquals(
+          isLibraryLoaded(),
+          true,
+          "Library should be loaded after initGit()",
+        );
+
+        const result = git.shutdown();
+        assertEquals(result, 0, "shutdown() should return 0");
+        assertFalse(
+          isLibraryLoaded(),
+          "Library should be unloaded after manual shutdown()",
+        );
       },
     );
   },

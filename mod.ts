@@ -1,76 +1,9 @@
-/**
- * @module deno-libgit2
- *
- * A Deno FFI binding for libgit2, providing Git repository operations
- * through the native libgit2 library.
- *
- * @example Basic usage
- * ```typescript
- * import { init, shutdown, Repository } from "jsr:@manus/libgit2";
- *
- * // Initialize the library (uses @denosaurs/plug for cross-platform resolution)
- * await init();
- *
- * try {
- *   // Open a repository
- *   using repo = Repository.open("/path/to/repo");
- *
- *   // Get repository info
- *   console.log("Path:", repo.path);
- *   console.log("Is bare:", repo.isBare);
- *
- *   // Get HEAD
- *   const head = repo.head();
- *   console.log("HEAD:", head.name);
- *
- *   // List branches
- *   const branches = repo.listBranches();
- *   for (const branch of branches) {
- *     console.log("Branch:", branch.name);
- *   }
- *
- *   // Get commit history
- *   const commits = repo.getCommits(undefined, 10);
- *   for (const commit of commits) {
- *     console.log(commit.oid.slice(0, 7), commit.message.split("\n")[0]);
- *   }
- *
- * } finally {
- *   shutdown();
- * }
- * ```
- *
- * @example Finding deleted file history
- * ```typescript
- * import { init, shutdown, Repository, findFileDeletion, findFileHistory } from "jsr:@manus/libgit2";
- *
- * await init();
- *
- * try {
- *   using repo = Repository.open("/path/to/repo");
- *
- *   // Find when a file was deleted and get its last content
- *   const deletion = findFileDeletion(repo, ".dork/blocks/some-uuid.md");
- *   if (deletion) {
- *     console.log("Deleted in:", deletion.deletedInCommit.commitOid);
- *     console.log("Last existed in:", deletion.lastExistedInCommit.commitOid);
- *     console.log("Content:", deletion.lastContent);
- *   }
- *
- *   // Find all commits where a file existed
- *   const history = findFileHistory(repo, "path/to/file.md");
- *   console.log(`File appeared in ${history.commits.length} commits`);
- *
- * } finally {
- *   shutdown();
- * }
- * ```
- */
-
 // Library management
 export {
   getLibrary,
+  type GitLibrary,
   init,
+  initGit,
   type InitOptions,
   isLibraryLoaded,
   LIBGIT2_VERSION,
