@@ -38,6 +38,7 @@ GIT_EXTERN(int) git_revert_commit(
 ```
 
 Revert a commit against another commit, producing an index.
+
 - `out` - Pointer to store result index
 - `repo` - Repository
 - `revert_commit` - Commit to revert

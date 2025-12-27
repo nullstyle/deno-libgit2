@@ -3,6 +3,7 @@
 ## Key Functions
 
 ### git_stash_save
+
 Save the local modifications to a new stash.
 
 ```c
@@ -18,6 +19,7 @@ int git_stash_save(
 Returns: 0 on success, GIT_ENOTFOUND if nothing to stash
 
 ### git_stash_apply
+
 Apply a single stashed state from the stash list.
 
 ```c
@@ -29,6 +31,7 @@ int git_stash_apply(
 ```
 
 ### git_stash_pop
+
 Apply and remove a stashed state.
 
 ```c
@@ -40,6 +43,7 @@ int git_stash_pop(
 ```
 
 ### git_stash_drop
+
 Remove a single stashed state without applying.
 
 ```c
@@ -50,6 +54,7 @@ int git_stash_drop(
 ```
 
 ### git_stash_foreach
+
 Iterate over all stashed states.
 
 ```c
@@ -70,6 +75,7 @@ int git_stash_foreach(
 ## Enums
 
 ### git_stash_flags
+
 ```c
 GIT_STASH_DEFAULT = 0,
 GIT_STASH_KEEP_INDEX = (1 << 0),      // Keep index changes in working dir
@@ -78,6 +84,7 @@ GIT_STASH_INCLUDE_IGNORED = (1 << 2),   // Also stash ignored files
 ```
 
 ### git_stash_apply_flags
+
 ```c
 GIT_STASH_APPLY_DEFAULT = 0,
 GIT_STASH_APPLY_REINSTATE_INDEX = (1 << 0), // Also restore index changes
@@ -114,7 +121,8 @@ git_stash_apply_options_init: {
 
 ## Use Cases
 
-1. **Save work in progress**: Stash uncommitted changes before switching branches
+1. **Save work in progress**: Stash uncommitted changes before switching
+   branches
 2. **Apply stash**: Restore stashed changes to working directory
 3. **Pop stash**: Apply and remove stash in one operation
 4. **List stashes**: Iterate over all stashed states

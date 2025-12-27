@@ -9,16 +9,8 @@ import {
   assertGreater,
   assertGreaterOrEqual,
 } from "@std/assert";
-import {
-  init,
-  shutdown,
-  Repository,
-} from "../../mod.ts";
-import {
-  createTestContext,
-  
-  createCommitWithFiles,
-} from "./helpers.ts";
+import { init, Repository, shutdown } from "../../mod.ts";
+import { createCommitWithFiles, createTestContext } from "./helpers.ts";
 
 Deno.test("E2E Reflog Tests", async (t) => {
   await init();
@@ -26,212 +18,221 @@ Deno.test("E2E Reflog Tests", async (t) => {
   try {
     await t.step("read reflog for HEAD", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
-        await createCommitWithFiles(ctx, "First commit", {
-          "file.txt": "content\n",
-        });
+      await createCommitWithFiles(ctx, "First commit", {
+        "file.txt": "content\n",
+      });
 
-        const reflog = ctx.repo.readReflog("HEAD");
-        try {
-          assertGreater(reflog.entryCount, 0, "Should have reflog entries");
-        } finally {
-          reflog.free();
-        }
-      
+      const reflog = ctx.repo.readReflog("HEAD");
+      try {
+        assertGreater(reflog.entryCount, 0, "Should have reflog entries");
+      } finally {
+        reflog.free();
+      }
     });
 
     await t.step("read reflog for refs/heads/main", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
-        await createCommitWithFiles(ctx, "First commit", {
-          "file.txt": "content\n",
-        });
+      await createCommitWithFiles(ctx, "First commit", {
+        "file.txt": "content\n",
+      });
 
-        // Get the actual default branch name
-        const head = ctx.repo.head();
-        const branchName = head.name; // e.g., "refs/heads/main" or "refs/heads/master"
+      // Get the actual default branch name
+      const head = ctx.repo.head();
+      const branchName = head.name; // e.g., "refs/heads/main" or "refs/heads/master"
 
-        const reflog = ctx.repo.readReflog(branchName);
-        try {
-          assertGreater(reflog.entryCount, 0, "Should have reflog entries");
-        } finally {
-          reflog.free();
-        }
-      
+      const reflog = ctx.repo.readReflog(branchName);
+      try {
+        assertGreater(reflog.entryCount, 0, "Should have reflog entries");
+      } finally {
+        reflog.free();
+      }
     });
 
     await t.step("reflog entry count increases with commits", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
-        await createCommitWithFiles(ctx, "First commit", {
-          "file.txt": "content 1\n",
-        });
+      await createCommitWithFiles(ctx, "First commit", {
+        "file.txt": "content 1\n",
+      });
 
-        const reflog1 = ctx.repo.readReflog("HEAD");
-        const count1 = reflog1.entryCount;
-        reflog1.free();
+      const reflog1 = ctx.repo.readReflog("HEAD");
+      const count1 = reflog1.entryCount;
+      reflog1.free();
 
-        await createCommitWithFiles(ctx, "Second commit", {
-          "file.txt": "content 2\n",
-        });
+      await createCommitWithFiles(ctx, "Second commit", {
+        "file.txt": "content 2\n",
+      });
 
-        // Reopen repo to get fresh reflog
-        ctx.repo.close();
-        ctx.repo = Repository.open(ctx.repoPath);
+      // Reopen repo to get fresh reflog
+      ctx.repo.close();
+      ctx.repo = Repository.open(ctx.repoPath);
 
-        const reflog2 = ctx.repo.readReflog("HEAD");
-        const count2 = reflog2.entryCount;
-        reflog2.free();
+      const reflog2 = ctx.repo.readReflog("HEAD");
+      const count2 = reflog2.entryCount;
+      reflog2.free();
 
-        assertGreater(count2, count1, "Entry count should increase after commit");
-      
+      assertGreater(count2, count1, "Entry count should increase after commit");
     });
 
     await t.step("reflog entry contains old and new OID", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
-        await createCommitWithFiles(ctx, "First commit", {
-          "file.txt": "content 1\n",
-        });
+      await createCommitWithFiles(ctx, "First commit", {
+        "file.txt": "content 1\n",
+      });
 
-        const firstOid = ctx.repo.headOid();
+      const firstOid = ctx.repo.headOid();
 
-        await createCommitWithFiles(ctx, "Second commit", {
-          "file.txt": "content 2\n",
-        });
+      await createCommitWithFiles(ctx, "Second commit", {
+        "file.txt": "content 2\n",
+      });
 
-        ctx.repo.close();
-        ctx.repo = Repository.open(ctx.repoPath);
+      ctx.repo.close();
+      ctx.repo = Repository.open(ctx.repoPath);
 
-        const reflog = ctx.repo.readReflog("HEAD");
-        try {
-          // Index 0 is the most recent entry
-          const entry = reflog.getEntry(0);
-          assertExists(entry, "Should have entry at index 0");
-          assertExists(entry.newOid, "Entry should have new OID");
-          assertExists(entry.oldOid, "Entry should have old OID");
-          assertEquals(entry.oldOid, firstOid, "Old OID should be first commit");
-        } finally {
-          reflog.free();
-        }
-      
+      const reflog = ctx.repo.readReflog("HEAD");
+      try {
+        // Index 0 is the most recent entry
+        const entry = reflog.getEntry(0);
+        assertExists(entry, "Should have entry at index 0");
+        assertExists(entry.newOid, "Entry should have new OID");
+        assertExists(entry.oldOid, "Entry should have old OID");
+        assertEquals(entry.oldOid, firstOid, "Old OID should be first commit");
+      } finally {
+        reflog.free();
+      }
     });
 
     await t.step("reflog entry contains committer information", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
-        await createCommitWithFiles(ctx, "First commit", {
-          "file.txt": "content\n",
-        });
+      await createCommitWithFiles(ctx, "First commit", {
+        "file.txt": "content\n",
+      });
 
-        const reflog = ctx.repo.readReflog("HEAD");
-        try {
-          const entry = reflog.getEntry(0);
-          assertExists(entry, "Should have entry");
-          assertExists(entry.committer, "Entry should have committer");
-          assertExists(entry.committer.name, "Committer should have name");
-          assertExists(entry.committer.email, "Committer should have email");
-        } finally {
-          reflog.free();
-        }
-      
+      const reflog = ctx.repo.readReflog("HEAD");
+      try {
+        const entry = reflog.getEntry(0);
+        assertExists(entry, "Should have entry");
+        assertExists(entry.committer, "Entry should have committer");
+        assertExists(entry.committer.name, "Committer should have name");
+        assertExists(entry.committer.email, "Committer should have email");
+      } finally {
+        reflog.free();
+      }
     });
 
     await t.step("reflog entry contains message", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
-        await createCommitWithFiles(ctx, "Test commit message", {
-          "file.txt": "content\n",
-        });
+      await createCommitWithFiles(ctx, "Test commit message", {
+        "file.txt": "content\n",
+      });
 
-        const reflog = ctx.repo.readReflog("HEAD");
-        try {
-          const entry = reflog.getEntry(0);
-          assertExists(entry, "Should have entry");
-          assertExists(entry.message, "Entry should have message");
-        } finally {
-          reflog.free();
-        }
-      
+      const reflog = ctx.repo.readReflog("HEAD");
+      try {
+        const entry = reflog.getEntry(0);
+        assertExists(entry, "Should have entry");
+        assertExists(entry.message, "Entry should have message");
+      } finally {
+        reflog.free();
+      }
     });
 
     await t.step("iterate over all reflog entries", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
-        // Create multiple commits
-        await createCommitWithFiles(ctx, "Commit 1", { "file.txt": "v1\n" });
-        await createCommitWithFiles(ctx, "Commit 2", { "file.txt": "v2\n" });
-        await createCommitWithFiles(ctx, "Commit 3", { "file.txt": "v3\n" });
+      // Create multiple commits
+      await createCommitWithFiles(ctx, "Commit 1", { "file.txt": "v1\n" });
+      await createCommitWithFiles(ctx, "Commit 2", { "file.txt": "v2\n" });
+      await createCommitWithFiles(ctx, "Commit 3", { "file.txt": "v3\n" });
 
-        ctx.repo.close();
-        ctx.repo = Repository.open(ctx.repoPath);
+      ctx.repo.close();
+      ctx.repo = Repository.open(ctx.repoPath);
 
-        const reflog = ctx.repo.readReflog("HEAD");
-        try {
-          const entries = reflog.entries();
-          assertGreaterOrEqual(entries.length, 3, "Should have at least 3 entries");
+      const reflog = ctx.repo.readReflog("HEAD");
+      try {
+        const entries = reflog.entries();
+        assertGreaterOrEqual(
+          entries.length,
+          3,
+          "Should have at least 3 entries",
+        );
 
-          // Verify entries are in reverse chronological order (newest first)
-          for (let i = 0; i < entries.length - 1; i++) {
-            assertExists(entries[i].newOid, `Entry ${i} should have new OID`);
-          }
-        } finally {
-          reflog.free();
+        // Verify entries are in reverse chronological order (newest first)
+        for (let i = 0; i < entries.length - 1; i++) {
+          assertExists(entries[i].newOid, `Entry ${i} should have new OID`);
         }
-      
+      } finally {
+        reflog.free();
+      }
     });
 
     await t.step("reflog tracks branch creation", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
-        await createCommitWithFiles(ctx, "Initial", { "file.txt": "content\n" });
+      await createCommitWithFiles(ctx, "Initial", { "file.txt": "content\n" });
 
-        // Create a new branch
-        ctx.repo.createBranch("feature", ctx.repo.headOid());
+      // Create a new branch
+      ctx.repo.createBranch("feature", ctx.repo.headOid());
 
-        // Read reflog for the new branch
-        const reflog = ctx.repo.readReflog("refs/heads/feature");
-        try {
-          assertGreater(reflog.entryCount, 0, "New branch should have reflog entry");
-        } finally {
-          reflog.free();
-        }
-      
+      // Read reflog for the new branch
+      const reflog = ctx.repo.readReflog("refs/heads/feature");
+      try {
+        assertGreater(
+          reflog.entryCount,
+          0,
+          "New branch should have reflog entry",
+        );
+      } finally {
+        reflog.free();
+      }
     });
 
     await t.step("empty reflog for non-existent reference", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
-        await createCommitWithFiles(ctx, "Initial", { "file.txt": "content\n" });
+      await createCommitWithFiles(ctx, "Initial", { "file.txt": "content\n" });
 
-        // Try to read reflog for non-existent reference
-        const reflog = ctx.repo.readReflog("refs/heads/nonexistent");
-        try {
-          assertEquals(reflog.entryCount, 0, "Non-existent ref should have empty reflog");
-        } finally {
-          reflog.free();
-        }
-      
+      // Try to read reflog for non-existent reference
+      const reflog = ctx.repo.readReflog("refs/heads/nonexistent");
+      try {
+        assertEquals(
+          reflog.entryCount,
+          0,
+          "Non-existent ref should have empty reflog",
+        );
+      } finally {
+        reflog.free();
+      }
     });
 
     await t.step("reflog entry OIDs are valid hex strings", async () => {
       await using ctx = await createTestContext({ withInitialCommit: true });
-        await createCommitWithFiles(ctx, "First", { "file.txt": "v1\n" });
-        await createCommitWithFiles(ctx, "Second", { "file.txt": "v2\n" });
+      await createCommitWithFiles(ctx, "First", { "file.txt": "v1\n" });
+      await createCommitWithFiles(ctx, "Second", { "file.txt": "v2\n" });
 
-        ctx.repo.close();
-        ctx.repo = Repository.open(ctx.repoPath);
+      ctx.repo.close();
+      ctx.repo = Repository.open(ctx.repoPath);
 
-        const reflog = ctx.repo.readReflog("HEAD");
-        try {
-          const entry = reflog.getEntry(0);
-          assertExists(entry, "Should have entry");
-          
-          // OIDs should be 40 character hex strings
-          assertEquals(entry.newOid.length, 40, "New OID should be 40 chars");
-          assertEquals(entry.oldOid.length, 40, "Old OID should be 40 chars");
-          
-          // Should only contain hex characters
-          const hexRegex = /^[0-9a-f]{40}$/;
-          assertEquals(hexRegex.test(entry.newOid), true, "New OID should be valid hex");
-          assertEquals(hexRegex.test(entry.oldOid), true, "Old OID should be valid hex");
-        } finally {
-          reflog.free();
-        }
-      
+      const reflog = ctx.repo.readReflog("HEAD");
+      try {
+        const entry = reflog.getEntry(0);
+        assertExists(entry, "Should have entry");
+
+        // OIDs should be 40 character hex strings
+        assertEquals(entry.newOid.length, 40, "New OID should be 40 chars");
+        assertEquals(entry.oldOid.length, 40, "Old OID should be 40 chars");
+
+        // Should only contain hex characters
+        const hexRegex = /^[0-9a-f]{40}$/;
+        assertEquals(
+          hexRegex.test(entry.newOid),
+          true,
+          "New OID should be valid hex",
+        );
+        assertEquals(
+          hexRegex.test(entry.oldOid),
+          true,
+          "Old OID should be valid hex",
+        );
+      } finally {
+        reflog.free();
+      }
     });
-
   } finally {
     shutdown();
   }

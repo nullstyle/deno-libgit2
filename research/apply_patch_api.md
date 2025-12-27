@@ -163,9 +163,8 @@ Serialize patch to a buffer (unified diff format).
    - `patchFromDiff()` function
    - `patchFromBuffers()` function
 
-Note: Apply requires Diff objects, which we haven't implemented yet.
-We should implement Diff first, then Apply/Patch.
-
+Note: Apply requires Diff objects, which we haven't implemented yet. We should
+implement Diff first, then Apply/Patch.
 
 ## Diff API (diff.h) - Key Functions
 

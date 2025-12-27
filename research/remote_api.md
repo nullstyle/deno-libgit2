@@ -2,11 +2,13 @@
 
 ## Overview
 
-The remote API provides functions for managing remote repositories - creating, listing, fetching, pushing, and configuring remotes.
+The remote API provides functions for managing remote repositories - creating,
+listing, fetching, pushing, and configuring remotes.
 
 ## Key Functions (from libgit2 v1.1.0)
 
 ### Remote Management
+
 - `git_remote_create` - Create a remote with name and URL
 - `git_remote_create_with_fetchspec` - Create remote with custom fetchspec
 - `git_remote_create_anonymous` - Create anonymous remote (no name)
@@ -15,6 +17,7 @@ The remote API provides functions for managing remote repositories - creating, l
 - `git_remote_free` - Free a remote
 
 ### Remote Properties
+
 - `git_remote_name` - Get remote name
 - `git_remote_url` - Get remote URL
 - `git_remote_pushurl` - Get push URL
@@ -22,9 +25,11 @@ The remote API provides functions for managing remote repositories - creating, l
 - `git_remote_set_pushurl` - Set push URL
 
 ### Remote List
+
 - `git_remote_list` - List all remotes in repository
 
 ### Network Operations
+
 - `git_remote_fetch` - Fetch from remote
 - `git_remote_push` - Push to remote
 - `git_remote_connect` - Connect to remote
@@ -32,6 +37,7 @@ The remote API provides functions for managing remote repositories - creating, l
 - `git_remote_connected` - Check if connected
 
 ### Refspecs
+
 - `git_remote_get_refspec` - Get refspec at index
 - `git_remote_refspec_count` - Get number of refspecs
 - `git_remote_add_fetch` - Add fetch refspec
@@ -40,6 +46,7 @@ The remote API provides functions for managing remote repositories - creating, l
 ## Structs
 
 ### `git_remote_create_options`
+
 ```c
 typedef struct git_remote_create_options {
   unsigned int version;
@@ -51,6 +58,7 @@ typedef struct git_remote_create_options {
 ```
 
 ### `git_remote_create_flags`
+
 ```c
 typedef enum {
   GIT_REMOTE_CREATE_SKIP_INSTEADOF = (1 << 0),

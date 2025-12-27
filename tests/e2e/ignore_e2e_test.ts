@@ -3,7 +3,7 @@
  */
 
 import { assertEquals } from "@std/assert";
-import {createTestContext } from "./helpers.ts";
+import { createTestContext } from "./helpers.ts";
 import { init, shutdown } from "../../mod.ts";
 
 Deno.test("E2E Ignore Tests", async (t) => {
@@ -11,164 +11,153 @@ Deno.test("E2E Ignore Tests", async (t) => {
 
   await t.step("check if path is ignored with no .gitignore", async () => {
     await using ctx = await createTestContext({ withInitialCommit: true });
-      // Create a file
-      await Deno.writeTextFile(`${ctx.repoPath}/test.txt`, "content");
+    // Create a file
+    await Deno.writeTextFile(`${ctx.repoPath}/test.txt`, "content");
 
-      // Check if it's ignored (should not be)
-      const ignored = ctx.repo.pathIsIgnored("test.txt");
-      assertEquals(ignored, false);
-    
+    // Check if it's ignored (should not be)
+    const ignored = ctx.repo.pathIsIgnored("test.txt");
+    assertEquals(ignored, false);
   });
 
   await t.step("check if path is ignored with .gitignore", async () => {
     await using ctx = await createTestContext({ withInitialCommit: true });
-      // Create .gitignore
-      await Deno.writeTextFile(`${ctx.repoPath}/.gitignore`, "*.log\n");
+    // Create .gitignore
+    await Deno.writeTextFile(`${ctx.repoPath}/.gitignore`, "*.log\n");
 
-      // Create files
-      await Deno.writeTextFile(`${ctx.repoPath}/test.txt`, "content");
-      await Deno.writeTextFile(`${ctx.repoPath}/debug.log`, "log content");
+    // Create files
+    await Deno.writeTextFile(`${ctx.repoPath}/test.txt`, "content");
+    await Deno.writeTextFile(`${ctx.repoPath}/debug.log`, "log content");
 
-      // Check if they're ignored
-      const txtIgnored = ctx.repo.pathIsIgnored("test.txt");
-      const logIgnored = ctx.repo.pathIsIgnored("debug.log");
+    // Check if they're ignored
+    const txtIgnored = ctx.repo.pathIsIgnored("test.txt");
+    const logIgnored = ctx.repo.pathIsIgnored("debug.log");
 
-      assertEquals(txtIgnored, false);
-      assertEquals(logIgnored, true);
-    
+    assertEquals(txtIgnored, false);
+    assertEquals(logIgnored, true);
   });
 
   await t.step("add ignore rule programmatically", async () => {
     await using ctx = await createTestContext({ withInitialCommit: true });
-      // Create a file
-      await Deno.writeTextFile(`${ctx.repoPath}/temp.tmp`, "temp content");
+    // Create a file
+    await Deno.writeTextFile(`${ctx.repoPath}/temp.tmp`, "temp content");
 
-      // Initially not ignored
-      assertEquals(ctx.repo.pathIsIgnored("temp.tmp"), false);
+    // Initially not ignored
+    assertEquals(ctx.repo.pathIsIgnored("temp.tmp"), false);
 
-      // Add ignore rule
-      ctx.repo.addIgnoreRule("*.tmp\n");
+    // Add ignore rule
+    ctx.repo.addIgnoreRule("*.tmp\n");
 
-      // Now should be ignored
-      assertEquals(ctx.repo.pathIsIgnored("temp.tmp"), true);
-    
+    // Now should be ignored
+    assertEquals(ctx.repo.pathIsIgnored("temp.tmp"), true);
   });
 
   await t.step("add multiple ignore rules at once", async () => {
     await using ctx = await createTestContext({ withInitialCommit: true });
-      // Create files
-      await Deno.writeTextFile(`${ctx.repoPath}/file.tmp`, "tmp");
-      await Deno.writeTextFile(`${ctx.repoPath}/file.bak`, "bak");
-      await Deno.writeTextFile(`${ctx.repoPath}/file.txt`, "txt");
+    // Create files
+    await Deno.writeTextFile(`${ctx.repoPath}/file.tmp`, "tmp");
+    await Deno.writeTextFile(`${ctx.repoPath}/file.bak`, "bak");
+    await Deno.writeTextFile(`${ctx.repoPath}/file.txt`, "txt");
 
-      // Add multiple rules
-      ctx.repo.addIgnoreRule("*.tmp\n*.bak\n");
+    // Add multiple rules
+    ctx.repo.addIgnoreRule("*.tmp\n*.bak\n");
 
-      // Check ignores
-      assertEquals(ctx.repo.pathIsIgnored("file.tmp"), true);
-      assertEquals(ctx.repo.pathIsIgnored("file.bak"), true);
-      assertEquals(ctx.repo.pathIsIgnored("file.txt"), false);
-    
+    // Check ignores
+    assertEquals(ctx.repo.pathIsIgnored("file.tmp"), true);
+    assertEquals(ctx.repo.pathIsIgnored("file.bak"), true);
+    assertEquals(ctx.repo.pathIsIgnored("file.txt"), false);
   });
 
   await t.step("clear internal ignore rules", async () => {
     await using ctx = await createTestContext({ withInitialCommit: true });
-      // Add ignore rule
-      ctx.repo.addIgnoreRule("*.tmp\n");
-      assertEquals(ctx.repo.pathIsIgnored("file.tmp"), true);
+    // Add ignore rule
+    ctx.repo.addIgnoreRule("*.tmp\n");
+    assertEquals(ctx.repo.pathIsIgnored("file.tmp"), true);
 
-      // Clear internal rules
-      ctx.repo.clearIgnoreRules();
+    // Clear internal rules
+    ctx.repo.clearIgnoreRules();
 
-      // Should no longer be ignored (unless in .gitignore file)
-      assertEquals(ctx.repo.pathIsIgnored("file.tmp"), false);
-    
+    // Should no longer be ignored (unless in .gitignore file)
+    assertEquals(ctx.repo.pathIsIgnored("file.tmp"), false);
   });
 
   await t.step("ignore directory pattern", async () => {
     await using ctx = await createTestContext({ withInitialCommit: true });
-      // Create directory and file
-      await Deno.mkdir(`${ctx.repoPath}/build`, { recursive: true });
-      await Deno.writeTextFile(`${ctx.repoPath}/build/output.js`, "code");
+    // Create directory and file
+    await Deno.mkdir(`${ctx.repoPath}/build`, { recursive: true });
+    await Deno.writeTextFile(`${ctx.repoPath}/build/output.js`, "code");
 
-      // Add directory ignore rule
-      ctx.repo.addIgnoreRule("build/\n");
+    // Add directory ignore rule
+    ctx.repo.addIgnoreRule("build/\n");
 
-      // Check if directory contents are ignored
-      assertEquals(ctx.repo.pathIsIgnored("build/output.js"), true);
-      assertEquals(ctx.repo.pathIsIgnored("build/"), true);
-    
+    // Check if directory contents are ignored
+    assertEquals(ctx.repo.pathIsIgnored("build/output.js"), true);
+    assertEquals(ctx.repo.pathIsIgnored("build/"), true);
   });
 
   await t.step("ignore with negation pattern", async () => {
     await using ctx = await createTestContext({ withInitialCommit: true });
-      // Create .gitignore with negation
-      await Deno.writeTextFile(
-        `${ctx.repoPath}/.gitignore`,
-        "*.log\n!important.log\n",
-      );
+    // Create .gitignore with negation
+    await Deno.writeTextFile(
+      `${ctx.repoPath}/.gitignore`,
+      "*.log\n!important.log\n",
+    );
 
-      // Check ignores
-      assertEquals(ctx.repo.pathIsIgnored("debug.log"), true);
-      assertEquals(ctx.repo.pathIsIgnored("important.log"), false);
-    
+    // Check ignores
+    assertEquals(ctx.repo.pathIsIgnored("debug.log"), true);
+    assertEquals(ctx.repo.pathIsIgnored("important.log"), false);
   });
 
   await t.step("ignore nested directory pattern", async () => {
     await using ctx = await createTestContext({ withInitialCommit: true });
-      // Create nested directories
-      await Deno.mkdir(`${ctx.repoPath}/src/node_modules`, { recursive: true });
-      await Deno.mkdir(`${ctx.repoPath}/lib/node_modules`, { recursive: true });
-      await Deno.writeTextFile(
-        `${ctx.repoPath}/src/node_modules/package.json`,
-        "{}",
-      );
+    // Create nested directories
+    await Deno.mkdir(`${ctx.repoPath}/src/node_modules`, { recursive: true });
+    await Deno.mkdir(`${ctx.repoPath}/lib/node_modules`, { recursive: true });
+    await Deno.writeTextFile(
+      `${ctx.repoPath}/src/node_modules/package.json`,
+      "{}",
+    );
 
-      // Add rule to ignore node_modules anywhere
-      ctx.repo.addIgnoreRule("**/node_modules/\n");
+    // Add rule to ignore node_modules anywhere
+    ctx.repo.addIgnoreRule("**/node_modules/\n");
 
-      // Check ignores
-      assertEquals(
-        ctx.repo.pathIsIgnored("src/node_modules/package.json"),
-        true,
-      );
-      assertEquals(ctx.repo.pathIsIgnored("lib/node_modules/"), true);
-    
+    // Check ignores
+    assertEquals(
+      ctx.repo.pathIsIgnored("src/node_modules/package.json"),
+      true,
+    );
+    assertEquals(ctx.repo.pathIsIgnored("lib/node_modules/"), true);
   });
 
   await t.step("default internal ignores", async () => {
     await using ctx = await createTestContext({ withInitialCommit: true });
-      // Default internal ignores should include ".", "..", ".git"
-      assertEquals(ctx.repo.pathIsIgnored(".git"), true);
-      assertEquals(ctx.repo.pathIsIgnored(".git/config"), true);
-    
+    // Default internal ignores should include ".", "..", ".git"
+    assertEquals(ctx.repo.pathIsIgnored(".git"), true);
+    assertEquals(ctx.repo.pathIsIgnored(".git/config"), true);
   });
 
   await t.step("ignore rule with spaces in filename", async () => {
     await using ctx = await createTestContext({ withInitialCommit: true });
-      // Create file with spaces
-      await Deno.writeTextFile(
-        `${ctx.repoPath}/file with spaces.txt`,
-        "content",
-      );
+    // Create file with spaces
+    await Deno.writeTextFile(
+      `${ctx.repoPath}/file with spaces.txt`,
+      "content",
+    );
 
-      // Add ignore rule (escape with backslash or quotes)
-      ctx.repo.addIgnoreRule("file\\ with\\ spaces.txt\n");
+    // Add ignore rule (escape with backslash or quotes)
+    ctx.repo.addIgnoreRule("file\\ with\\ spaces.txt\n");
 
-      // Check if ignored
-      assertEquals(ctx.repo.pathIsIgnored("file with spaces.txt"), true);
-    
+    // Check if ignored
+    assertEquals(ctx.repo.pathIsIgnored("file with spaces.txt"), true);
   });
 
   await t.step("check non-existent file path", async () => {
     await using ctx = await createTestContext({ withInitialCommit: true });
-      // Add ignore rule
-      ctx.repo.addIgnoreRule("*.log\n");
+    // Add ignore rule
+    ctx.repo.addIgnoreRule("*.log\n");
 
-      // Check non-existent file (should still work based on pattern)
-      assertEquals(ctx.repo.pathIsIgnored("nonexistent.log"), true);
-      assertEquals(ctx.repo.pathIsIgnored("nonexistent.txt"), false);
-    
+    // Check non-existent file (should still work based on pattern)
+    assertEquals(ctx.repo.pathIsIgnored("nonexistent.log"), true);
+    assertEquals(ctx.repo.pathIsIgnored("nonexistent.txt"), false);
   });
 
   shutdown();

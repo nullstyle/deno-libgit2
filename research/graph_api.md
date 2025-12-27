@@ -3,6 +3,7 @@
 ## Key Functions
 
 ### git_graph_ahead_behind
+
 Count the number of unique commits between two commit objects.
 
 ```c
@@ -15,9 +16,11 @@ int git_graph_ahead_behind(
 );
 ```
 
-This is useful for determining how many commits a branch is ahead/behind another branch.
+This is useful for determining how many commits a branch is ahead/behind another
+branch.
 
 ### git_graph_descendant_of
+
 Determine if a commit is the descendant of another commit.
 
 ```c
@@ -29,11 +32,13 @@ int git_graph_descendant_of(
 ```
 
 Returns:
+
 - 1 if the given commit is a descendant of the potential ancestor
 - 0 if not
 - error code otherwise
 
-Note: A commit is NOT considered a descendant of itself (different from `git merge-base --is-ancestor`).
+Note: A commit is NOT considered a descendant of itself (different from
+`git merge-base --is-ancestor`).
 
 ## FFI Signatures
 
@@ -50,6 +55,9 @@ git_graph_descendant_of: {
 
 ## Use Cases
 
-1. **Branch comparison**: Determine how many commits a feature branch is ahead/behind main
-2. **Ancestry checking**: Determine if a commit is an ancestor of another (useful for fast-forward checks)
-3. **Merge analysis**: Help determine if a merge is needed or if fast-forward is possible
+1. **Branch comparison**: Determine how many commits a feature branch is
+   ahead/behind main
+2. **Ancestry checking**: Determine if a commit is an ancestor of another
+   (useful for fast-forward checks)
+3. **Merge analysis**: Help determine if a merge is needed or if fast-forward is
+   possible

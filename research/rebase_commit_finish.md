@@ -13,6 +13,7 @@ GIT_EXTERN(int) git_rebase_commit(
 ```
 
 **Parameters:**
+
 - `id` - Output: OID of newly created commit
 - `rebase` - The rebase in progress
 - `author` - Author of updated commit, or NULL to keep original
@@ -21,6 +22,7 @@ GIT_EXTERN(int) git_rebase_commit(
 - `message` - Commit message, or NULL to use original
 
 **Returns:**
+
 - 0 on success
 - GIT_EUNMERGED if unmerged changes
 - GIT_EAPPLIED if commit already applied
@@ -35,10 +37,12 @@ GIT_EXTERN(int) git_rebase_finish(
 ```
 
 **Parameters:**
+
 - `rebase` - The rebase in progress
 - `signature` - Identity finishing the rebase (optional, can be NULL)
 
 **Returns:**
+
 - 0 on success
 - -1 on error
 

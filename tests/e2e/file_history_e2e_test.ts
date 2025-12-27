@@ -7,23 +7,23 @@
  */
 
 import {
+  createCommitWithDeletions,
+  createCommitWithFiles,
   setupLibrary,
   teardownLibrary,
   withTestContext,
-  createCommitWithFiles,
-  createCommitWithDeletions,
 } from "./helpers.ts";
 import {
-  Tree,
   Blob,
-  getFileContent,
   fileExistsAtCommit,
-  findFileHistory,
-  findFileDeletion,
-  findFileCreation,
-  findFileModifications,
   fileExistsAtHead,
+  findFileCreation,
+  findFileDeletion,
+  findFileHistory,
+  findFileModifications,
   getFileAtHead,
+  getFileContent,
+  Tree,
 } from "../../mod.ts";
 import { assertEquals, assertExists } from "@std/assert";
 
@@ -97,60 +97,80 @@ Deno.test({
         });
 
         const commits = Array.from(ctx.repo.walkCommits());
-        const fileContent = getFileContent(ctx.repo, commits[0].treeOid, "data/file.txt");
+        const fileContent = getFileContent(
+          ctx.repo,
+          commits[0].treeOid,
+          "data/file.txt",
+        );
 
         assertEquals(fileContent, content);
       });
     });
 
-    await t.step("fileExistsAtCommit checks file existence at specific commit", async () => {
-      await withTestContext({}, async (ctx) => {
-        // Commit 1: Add file
-        const commit1 = await createCommitWithFiles(ctx, "Add file", {
-          "file.txt": "content",
+    await t.step(
+      "fileExistsAtCommit checks file existence at specific commit",
+      async () => {
+        await withTestContext({}, async (ctx) => {
+          // Commit 1: Add file
+          const commit1 = await createCommitWithFiles(ctx, "Add file", {
+            "file.txt": "content",
+          });
+
+          // Commit 2: Add another file
+          const commit2 = await createCommitWithFiles(ctx, "Add another", {
+            "other.txt": "other content",
+          });
+
+          // Check file existence at both commits
+          assertEquals(fileExistsAtCommit(ctx.repo, commit1, "file.txt"), true);
+          assertEquals(
+            fileExistsAtCommit(ctx.repo, commit1, "other.txt"),
+            false,
+          );
+          assertEquals(fileExistsAtCommit(ctx.repo, commit2, "file.txt"), true);
+          assertEquals(
+            fileExistsAtCommit(ctx.repo, commit2, "other.txt"),
+            true,
+          );
         });
+      },
+    );
 
-        // Commit 2: Add another file
-        const commit2 = await createCommitWithFiles(ctx, "Add another", {
-          "other.txt": "other content",
+    await t.step(
+      "findFileHistory returns all commits containing file",
+      async () => {
+        await withTestContext({}, async (ctx) => {
+          // Commit 1: Add file
+          await createCommitWithFiles(ctx, "Add file", {
+            "tracked.txt": "version 1",
+          });
+
+          // Commit 2: Modify file
+          await createCommitWithFiles(ctx, "Modify file", {
+            "tracked.txt": "version 2",
+          });
+
+          // Commit 3: Add unrelated file
+          await createCommitWithFiles(ctx, "Add other", {
+            "other.txt": "other",
+          });
+
+          // Commit 4: Modify tracked file again
+          await createCommitWithFiles(ctx, "Modify again", {
+            "tracked.txt": "version 3",
+          });
+
+          const history = findFileHistory(ctx.repo, "tracked.txt");
+
+          assertEquals(
+            history.commits.length,
+            4,
+            "File should appear in all 4 commits",
+          );
+          assertEquals(history.currentlyExists, true);
         });
-
-        // Check file existence at both commits
-        assertEquals(fileExistsAtCommit(ctx.repo, commit1, "file.txt"), true);
-        assertEquals(fileExistsAtCommit(ctx.repo, commit1, "other.txt"), false);
-        assertEquals(fileExistsAtCommit(ctx.repo, commit2, "file.txt"), true);
-        assertEquals(fileExistsAtCommit(ctx.repo, commit2, "other.txt"), true);
-      });
-    });
-
-    await t.step("findFileHistory returns all commits containing file", async () => {
-      await withTestContext({}, async (ctx) => {
-        // Commit 1: Add file
-        await createCommitWithFiles(ctx, "Add file", {
-          "tracked.txt": "version 1",
-        });
-
-        // Commit 2: Modify file
-        await createCommitWithFiles(ctx, "Modify file", {
-          "tracked.txt": "version 2",
-        });
-
-        // Commit 3: Add unrelated file
-        await createCommitWithFiles(ctx, "Add other", {
-          "other.txt": "other",
-        });
-
-        // Commit 4: Modify tracked file again
-        await createCommitWithFiles(ctx, "Modify again", {
-          "tracked.txt": "version 3",
-        });
-
-        const history = findFileHistory(ctx.repo, "tracked.txt");
-
-        assertEquals(history.commits.length, 4, "File should appear in all 4 commits");
-        assertEquals(history.currentlyExists, true);
-      });
-    });
+      },
+    );
 
     await t.step("findFileDeletion detects when file was deleted", async () => {
       await withTestContext({}, async (ctx) => {
@@ -170,46 +190,58 @@ Deno.test({
         const deletion = findFileDeletion(ctx.repo, "to-delete.txt");
 
         assertExists(deletion, "Should find deletion");
-        assertEquals(deletion.deletedInCommit.message.includes("Delete file"), true);
-        assertEquals(deletion.lastExistedInCommit.message.includes("Modify file"), true);
+        assertEquals(
+          deletion.deletedInCommit.message.includes("Delete file"),
+          true,
+        );
+        assertEquals(
+          deletion.lastExistedInCommit.message.includes("Modify file"),
+          true,
+        );
         assertEquals(deletion.lastContent, "modified content");
       });
     });
 
-    await t.step("findFileDeletion returns null for existing file", async () => {
-      await withTestContext({}, async (ctx) => {
-        await createCommitWithFiles(ctx, "Add file", {
-          "existing.txt": "content",
+    await t.step(
+      "findFileDeletion returns null for existing file",
+      async () => {
+        await withTestContext({}, async (ctx) => {
+          await createCommitWithFiles(ctx, "Add file", {
+            "existing.txt": "content",
+          });
+
+          const deletion = findFileDeletion(ctx.repo, "existing.txt");
+          assertEquals(deletion, null, "Should return null for existing file");
         });
+      },
+    );
 
-        const deletion = findFileDeletion(ctx.repo, "existing.txt");
-        assertEquals(deletion, null, "Should return null for existing file");
-      });
-    });
+    await t.step(
+      "findFileCreation finds when file was first added",
+      async () => {
+        await withTestContext({}, async (ctx) => {
+          // Commit 1: Add other file
+          await createCommitWithFiles(ctx, "Add other", {
+            "other.txt": "other",
+          });
 
-    await t.step("findFileCreation finds when file was first added", async () => {
-      await withTestContext({}, async (ctx) => {
-        // Commit 1: Add other file
-        await createCommitWithFiles(ctx, "Add other", {
-          "other.txt": "other",
+          // Commit 2: Add tracked file
+          await createCommitWithFiles(ctx, "Add tracked", {
+            "tracked.txt": "initial content",
+          });
+
+          // Commit 3: Modify tracked file
+          await createCommitWithFiles(ctx, "Modify tracked", {
+            "tracked.txt": "modified content",
+          });
+
+          const creation = findFileCreation(ctx.repo, "tracked.txt");
+
+          assertExists(creation, "Should find creation");
+          assertEquals(creation.message.includes("Add tracked"), true);
         });
-
-        // Commit 2: Add tracked file
-        await createCommitWithFiles(ctx, "Add tracked", {
-          "tracked.txt": "initial content",
-        });
-
-        // Commit 3: Modify tracked file
-        await createCommitWithFiles(ctx, "Modify tracked", {
-          "tracked.txt": "modified content",
-        });
-
-        const creation = findFileCreation(ctx.repo, "tracked.txt");
-
-        assertExists(creation, "Should find creation");
-        assertEquals(creation.message.includes("Add tracked"), true);
-      });
-    });
+      },
+    );
 
     await t.step("fileExistsAtHead checks current file existence", async () => {
       await withTestContext({}, async (ctx) => {
@@ -237,90 +269,122 @@ Deno.test({
     });
 
     // Wiki/Dork Blocks Scenario Tests
-    await t.step("Wiki scenario: Track block file through lifecycle", async () => {
-      await withTestContext({}, async (ctx) => {
-        const blockId = "01234567-89ab-cdef-0123-456789abcdef";
-        const blockPath = `.dork/blocks/${blockId}.md`;
+    await t.step(
+      "Wiki scenario: Track block file through lifecycle",
+      async () => {
+        await withTestContext({}, async (ctx) => {
+          const blockId = "01234567-89ab-cdef-0123-456789abcdef";
+          const blockPath = `.dork/blocks/${blockId}.md`;
 
-        // Step 1: Create the block
-        await createCommitWithFiles(ctx, "Create block", {
-          [blockPath]: "# My Block\n\nInitial content.",
-        });
-
-        // Step 2: Edit the block
-        await createCommitWithFiles(ctx, "Edit block", {
-          [blockPath]: "# My Block\n\nEdited content with more details.",
-        });
-
-        // Step 3: Add a reference to this block from another block
-        const otherBlockPath = `.dork/blocks/other-block.md`;
-        await createCommitWithFiles(ctx, "Add reference", {
-          [otherBlockPath]: `# Other Block\n\nSee also: [[${blockId}]]`,
-        });
-
-        // Step 4: Delete the original block (orphaning the reference)
-        await createCommitWithDeletions(ctx, "Delete block", [blockPath]);
-
-        // Now verify we can track the deleted block's history
-        const history = findFileHistory(ctx.repo, blockPath);
-        assertEquals(history.commits.length, 3, "Block should appear in 3 commits before deletion");
-        assertEquals(history.currentlyExists, false, "Block should no longer exist");
-
-        // Find when it was deleted and get last content
-        const deletion = findFileDeletion(ctx.repo, blockPath);
-        assertExists(deletion);
-        assertEquals(deletion.lastContent?.includes("Edited content"), true);
-
-        // Find when it was created
-        const creation = findFileCreation(ctx.repo, blockPath);
-        assertExists(creation);
-        assertEquals(creation.message.includes("Create block"), true);
-
-        // Verify the referencing block still exists
-        assertEquals(fileExistsAtHead(ctx.repo, otherBlockPath), true);
-        const refContent = getFileAtHead(ctx.repo, otherBlockPath);
-        assertEquals(refContent?.includes(blockId), true, "Reference should still contain block ID");
-      });
-    });
-
-    await t.step("Wiki scenario: Find all commits where deleted block existed", async () => {
-      await withTestContext({}, async (ctx) => {
-        const blockPath = ".dork/blocks/tracked-block.md";
-
-        // Create multiple versions of the block
-        const versions = [
-          "Version 1: Initial draft",
-          "Version 2: Added more content",
-          "Version 3: Refined the text",
-          "Version 4: Final version before deletion",
-        ];
-
-        for (const content of versions) {
-          await createCommitWithFiles(ctx, `Update: ${content.split(":")[0]}`, {
-            [blockPath]: content,
+          // Step 1: Create the block
+          await createCommitWithFiles(ctx, "Create block", {
+            [blockPath]: "# My Block\n\nInitial content.",
           });
-        }
 
-        // Delete the block
-        await createCommitWithDeletions(ctx, "Remove outdated block", [blockPath]);
+          // Step 2: Edit the block
+          await createCommitWithFiles(ctx, "Edit block", {
+            [blockPath]: "# My Block\n\nEdited content with more details.",
+          });
 
-        // Get full history
-        const history = findFileHistory(ctx.repo, blockPath);
+          // Step 3: Add a reference to this block from another block
+          const otherBlockPath = `.dork/blocks/other-block.md`;
+          await createCommitWithFiles(ctx, "Add reference", {
+            [otherBlockPath]: `# Other Block\n\nSee also: [[${blockId}]]`,
+          });
 
-        assertEquals(history.commits.length, 4, "Should have 4 commits with the file");
-        assertEquals(history.currentlyExists, false);
+          // Step 4: Delete the original block (orphaning the reference)
+          await createCommitWithDeletions(ctx, "Delete block", [blockPath]);
 
-        // Verify we can get content at each commit
-        for (let i = 0; i < history.commits.length; i++) {
-          const commitInfo = history.commits[i];
-          // Get the full commit to access treeOid
-          const commit = ctx.repo.lookupCommit(commitInfo.commitOid);
-          const content = getFileContent(ctx.repo, commit.treeOid, blockPath);
-          assertExists(content, `Content should exist at commit ${i}`);
-          assertEquals(content.includes(`Version ${4 - i}`), true, `Should be version ${4 - i}`);
-        }
-      });
-    });
+          // Now verify we can track the deleted block's history
+          const history = findFileHistory(ctx.repo, blockPath);
+          assertEquals(
+            history.commits.length,
+            3,
+            "Block should appear in 3 commits before deletion",
+          );
+          assertEquals(
+            history.currentlyExists,
+            false,
+            "Block should no longer exist",
+          );
+
+          // Find when it was deleted and get last content
+          const deletion = findFileDeletion(ctx.repo, blockPath);
+          assertExists(deletion);
+          assertEquals(deletion.lastContent?.includes("Edited content"), true);
+
+          // Find when it was created
+          const creation = findFileCreation(ctx.repo, blockPath);
+          assertExists(creation);
+          assertEquals(creation.message.includes("Create block"), true);
+
+          // Verify the referencing block still exists
+          assertEquals(fileExistsAtHead(ctx.repo, otherBlockPath), true);
+          const refContent = getFileAtHead(ctx.repo, otherBlockPath);
+          assertEquals(
+            refContent?.includes(blockId),
+            true,
+            "Reference should still contain block ID",
+          );
+        });
+      },
+    );
+
+    await t.step(
+      "Wiki scenario: Find all commits where deleted block existed",
+      async () => {
+        await withTestContext({}, async (ctx) => {
+          const blockPath = ".dork/blocks/tracked-block.md";
+
+          // Create multiple versions of the block
+          const versions = [
+            "Version 1: Initial draft",
+            "Version 2: Added more content",
+            "Version 3: Refined the text",
+            "Version 4: Final version before deletion",
+          ];
+
+          for (const content of versions) {
+            await createCommitWithFiles(
+              ctx,
+              `Update: ${content.split(":")[0]}`,
+              {
+                [blockPath]: content,
+              },
+            );
+          }
+
+          // Delete the block
+          await createCommitWithDeletions(ctx, "Remove outdated block", [
+            blockPath,
+          ]);
+
+          // Get full history
+          const history = findFileHistory(ctx.repo, blockPath);
+
+          assertEquals(
+            history.commits.length,
+            4,
+            "Should have 4 commits with the file",
+          );
+          assertEquals(history.currentlyExists, false);
+
+          // Verify we can get content at each commit
+          for (let i = 0; i < history.commits.length; i++) {
+            const commitInfo = history.commits[i];
+            // Get the full commit to access treeOid
+            const commit = ctx.repo.lookupCommit(commitInfo.commitOid);
+            const content = getFileContent(ctx.repo, commit.treeOid, blockPath);
+            assertExists(content, `Content should exist at commit ${i}`);
+            assertEquals(
+              content.includes(`Version ${4 - i}`),
+              true,
+              `Should be version ${4 - i}`,
+            );
+          }
+        });
+      },
+    );
 
     await t.step("Wiki scenario: Detect orphaned references", async () => {
       await withTestContext({}, async (ctx) => {
@@ -374,7 +438,11 @@ Deno.test({
         const modifications = findFileModifications(ctx.repo, filePath);
 
         // Should have 3 modifications: create, first edit, second edit
-        assertEquals(modifications.length, 3, "Should have exactly 3 modifications");
+        assertEquals(
+          modifications.length,
+          3,
+          "Should have exactly 3 modifications",
+        );
 
         // Verify messages contain expected content (in reverse chronological order)
         const messages = modifications.map((m) => m.message);

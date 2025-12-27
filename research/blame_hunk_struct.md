@@ -19,25 +19,26 @@ typedef struct git_blame_hunk {
 ```
 
 Note: v1.1.0 does NOT have:
+
 - final_committer
-- orig_committer  
+- orig_committer
 - summary
 
 These were added in later versions.
 
 ## Calculated Offsets
 
-| Field | Offset | Size | Notes |
-|-------|--------|------|-------|
-| lines_in_hunk | 0 | 8 | size_t |
-| final_commit_id | 8 | 20 | git_oid |
-| (padding) | 28 | 4 | align to 8 |
-| final_start_line_number | 32 | 8 | size_t |
-| final_signature | 40 | 8 | pointer |
-| orig_commit_id | 48 | 20 | git_oid |
-| (padding) | 68 | 4 | align to 8 |
-| orig_path | 72 | 8 | pointer |
-| orig_start_line_number | 80 | 8 | size_t |
-| orig_signature | 88 | 8 | pointer |
-| boundary | 96 | 1 | char |
-| Total | | ~97 | |
+| Field                   | Offset | Size | Notes      |
+| ----------------------- | ------ | ---- | ---------- |
+| lines_in_hunk           | 0      | 8    | size_t     |
+| final_commit_id         | 8      | 20   | git_oid    |
+| (padding)               | 28     | 4    | align to 8 |
+| final_start_line_number | 32     | 8    | size_t     |
+| final_signature         | 40     | 8    | pointer    |
+| orig_commit_id          | 48     | 20   | git_oid    |
+| (padding)               | 68     | 4    | align to 8 |
+| orig_path               | 72     | 8    | pointer    |
+| orig_start_line_number  | 80     | 8    | size_t     |
+| orig_signature          | 88     | 8    | pointer    |
+| boundary                | 96     | 1    | char       |
+| Total                   |        | ~97  |            |

@@ -38,6 +38,7 @@ GIT_EXTERN(int) git_cherrypick_commit(
 ```
 
 Cherry-pick a commit against another commit, producing an index.
+
 - `out` - Pointer to store result index (must be freed with git_index_free)
 - `repo` - Repository containing the commits
 - `cherrypick_commit` - The commit to cherry-pick
@@ -57,6 +58,7 @@ GIT_EXTERN(int) git_cherrypick(
 ```
 
 Cherry-pick a commit, modifying index and working directory.
+
 - `repo` - Repository to cherry-pick in
 - `commit` - Commit to cherry-pick
 - `cherrypick_options` - Options or NULL for defaults

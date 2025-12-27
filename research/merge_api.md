@@ -3,6 +3,7 @@
 ## Key Functions
 
 ### git_merge
+
 ```c
 int git_merge(
     git_repository *repo,
@@ -12,6 +13,7 @@ int git_merge(
     const git_checkout_options *checkout_opts
 );
 ```
+
 - Merges commit(s) into HEAD
 - Writes results to working directory
 - Stages changes for commit
@@ -19,6 +21,7 @@ int git_merge(
 - Returns 0 on success
 
 ### git_merge_analysis
+
 ```c
 int git_merge_analysis(
     git_merge_analysis_t *analysis_out,
@@ -28,10 +31,12 @@ int git_merge_analysis(
     size_t their_heads_len
 );
 ```
+
 - Analyzes merge possibilities
 - Returns analysis flags (fast-forward possible, up-to-date, etc.)
 
 ### git_merge_base
+
 ```c
 int git_merge_base(
     git_oid *out,
@@ -40,9 +45,11 @@ int git_merge_base(
     const git_oid *two
 );
 ```
+
 - Finds common ancestor between two commits
 
 ### git_merge_commits
+
 ```c
 int git_merge_commits(
     git_index **out,
@@ -52,10 +59,12 @@ int git_merge_commits(
     const git_merge_options *opts
 );
 ```
+
 - Merges two commits into an index
 - Does not modify working directory
 
 ### git_merge_trees
+
 ```c
 int git_merge_trees(
     git_index **out,
@@ -66,9 +75,11 @@ int git_merge_trees(
     const git_merge_options *opts
 );
 ```
+
 - Merges two trees with common ancestor
 
 ### git_annotated_commit_from_ref
+
 ```c
 int git_annotated_commit_from_ref(
     git_annotated_commit **out,
@@ -76,9 +87,11 @@ int git_annotated_commit_from_ref(
     const git_reference *ref
 );
 ```
+
 - Creates annotated commit from reference (needed for merge)
 
 ### git_annotated_commit_lookup
+
 ```c
 int git_annotated_commit_lookup(
     git_annotated_commit **out,
@@ -86,9 +99,11 @@ int git_annotated_commit_lookup(
     const git_oid *id
 );
 ```
+
 - Creates annotated commit from OID
 
 ### git_annotated_commit_free
+
 ```c
 void git_annotated_commit_free(git_annotated_commit *commit);
 ```
@@ -96,18 +111,21 @@ void git_annotated_commit_free(git_annotated_commit *commit);
 ## Enums
 
 ### git_merge_analysis_t
+
 - GIT_MERGE_ANALYSIS_NONE = 0
-- GIT_MERGE_ANALYSIS_NORMAL = 1 << 0  (normal merge possible)
-- GIT_MERGE_ANALYSIS_UP_TO_DATE = 1 << 1  (already up to date)
-- GIT_MERGE_ANALYSIS_FASTFORWARD = 1 << 2  (fast-forward possible)
-- GIT_MERGE_ANALYSIS_UNBORN = 1 << 3  (HEAD is unborn)
+- GIT_MERGE_ANALYSIS_NORMAL = 1 << 0 (normal merge possible)
+- GIT_MERGE_ANALYSIS_UP_TO_DATE = 1 << 1 (already up to date)
+- GIT_MERGE_ANALYSIS_FASTFORWARD = 1 << 2 (fast-forward possible)
+- GIT_MERGE_ANALYSIS_UNBORN = 1 << 3 (HEAD is unborn)
 
 ### git_merge_preference_t
+
 - GIT_MERGE_PREFERENCE_NONE = 0
 - GIT_MERGE_PREFERENCE_NO_FASTFORWARD = 1 << 0
 - GIT_MERGE_PREFERENCE_FASTFORWARD_ONLY = 1 << 1
 
 ### git_merge_flag_t
+
 - GIT_MERGE_FIND_RENAMES = 1 << 0
 - GIT_MERGE_FAIL_ON_CONFLICT = 1 << 1
 - GIT_MERGE_SKIP_REUC = 1 << 2
@@ -124,10 +142,10 @@ void git_annotated_commit_free(git_annotated_commit *commit);
 6. If no conflicts: create merge commit
 7. Call git_repository_state_cleanup()
 
-
 ## Annotated Commit Functions
 
 ### git_annotated_commit_from_ref
+
 ```c
 int git_annotated_commit_from_ref(
     git_annotated_commit **out,
@@ -135,9 +153,11 @@ int git_annotated_commit_from_ref(
     const git_reference *ref
 );
 ```
+
 - Creates annotated commit from a reference
 
 ### git_annotated_commit_lookup
+
 ```c
 int git_annotated_commit_lookup(
     git_annotated_commit **out,
@@ -145,9 +165,11 @@ int git_annotated_commit_lookup(
     const git_oid *id
 );
 ```
+
 - Creates annotated commit from commit OID
 
 ### git_annotated_commit_from_revspec
+
 ```c
 int git_annotated_commit_from_revspec(
     git_annotated_commit **out,
@@ -155,25 +177,31 @@ int git_annotated_commit_from_revspec(
     const char *revspec
 );
 ```
+
 - Creates annotated commit from revision string (e.g., "HEAD~2", "main")
 
 ### git_annotated_commit_id
+
 ```c
 const git_oid *git_annotated_commit_id(
     const git_annotated_commit *commit
 );
 ```
+
 - Gets the commit ID
 
 ### git_annotated_commit_ref
+
 ```c
 const char *git_annotated_commit_ref(
     const git_annotated_commit *commit
 );
 ```
+
 - Gets the refname
 
 ### git_annotated_commit_free
+
 ```c
 void git_annotated_commit_free(git_annotated_commit *commit);
 ```
