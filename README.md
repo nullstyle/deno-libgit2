@@ -1,9 +1,11 @@
 # Deno Libgit2
 
-**WARNING:  This code has been vibed.  you probably don't want to depend upon it, but I'm a dork like that**
+**WARNING: This code has been vibed. you probably don't want to depend upon it,
+but I'm a dork like that**
 
 A comprehensive Deno FFI binding for [libgit2](https://libgit2.org/), providing
-a powerful and flexible way to interact with Git repositories directly from Deno.
+a powerful and flexible way to interact with Git repositories directly from
+Deno.
 
 This package offers a modern, type-safe, and object-oriented API for Git
 operations, built on top of the performance and reliability of libgit2.
@@ -72,11 +74,11 @@ console.log(`HEAD: ${repo.headOid()}`);
 
 ### Resource Management
 
-Both the library and classes that wrap native resources implement `Symbol.dispose`
-and can be used with `using` for automatic cleanup:
+Both the library and classes that wrap native resources implement
+`Symbol.dispose` and can be used with `using` for automatic cleanup:
 
 ```typescript
-import { initGit, Repository, Index } from "jsr:@nullstyle/libgit2";
+import { Index, initGit, Repository } from "jsr:@nullstyle/libgit2";
 
 using git = await initGit();
 using repo = Repository.open(".");
@@ -111,7 +113,12 @@ for (const commit of repo.walkCommits(undefined, 5)) {
 ### Creating a Commit
 
 ```typescript
-import { createCommit, Index, initGit, Repository } from "jsr:@nullstyle/libgit2";
+import {
+  createCommit,
+  Index,
+  initGit,
+  Repository,
+} from "jsr:@nullstyle/libgit2";
 
 using git = await initGit();
 using repo = Repository.open("/path/to/repo");
@@ -244,13 +251,14 @@ repo.stashPop();
 
 ### Library Management
 
-| Function          | Description                                           |
-| ----------------- | ----------------------------------------------------- |
+| Function          | Description                                                            |
+| ----------------- | ---------------------------------------------------------------------- |
 | `initGit()`       | Initialize libgit2, returns a `GitLibrary` handle for use with `using` |
-| `version()`       | Get libgit2 version as `{major, minor, revision}`     |
-| `versionString()` | Get libgit2 version as a string                       |
+| `version()`       | Get libgit2 version as `{major, minor, revision}`                      |
+| `versionString()` | Get libgit2 version as a string                                        |
 
-The `GitLibrary` object returned by `initGit()` implements `Symbol.dispose`, so it can be used with the `using` statement for automatic cleanup:
+The `GitLibrary` object returned by `initGit()` implements `Symbol.dispose`, so
+it can be used with the `using` statement for automatic cleanup:
 
 ```typescript
 using git = await initGit();
@@ -258,6 +266,7 @@ using git = await initGit();
 ```
 
 You can also access version info directly from the `GitLibrary` object:
+
 - `git.version` - Version as `{major, minor, revision}`
 - `git.versionString` - Version as a string
 - `git.shutdown()` - Manually shutdown (also called automatically on dispose)
@@ -266,60 +275,61 @@ You can also access version info directly from the `GitLibrary` object:
 
 Core repository operations:
 
-| Method                   | Description                                        |
-| ------------------------ | -------------------------------------------------- |
-| `Repository.open(path)`  | Open an existing repository                        |
-| `Repository.init(path)`  | Create a new repository                            |
-| `Repository.discover()`  | Find a repository by walking up from a path        |
-| `close()`                | Close the repository and free memory               |
-| `head()`                 | Get the current HEAD reference                     |
-| `headOid()`              | Get the OID of the commit HEAD points to           |
-| `setHead(ref)`           | Set HEAD to a reference                            |
-| `setHeadDetached(oid)`   | Detach HEAD at a specific commit                   |
-| `state`                  | Get repository state (normal, merging, etc.)       |
-| `stateCleanup()`         | Clean up repository state after merge/revert       |
+| Method                  | Description                                  |
+| ----------------------- | -------------------------------------------- |
+| `Repository.open(path)` | Open an existing repository                  |
+| `Repository.init(path)` | Create a new repository                      |
+| `Repository.discover()` | Find a repository by walking up from a path  |
+| `close()`               | Close the repository and free memory         |
+| `head()`                | Get the current HEAD reference               |
+| `headOid()`             | Get the OID of the commit HEAD points to     |
+| `setHead(ref)`          | Set HEAD to a reference                      |
+| `setHeadDetached(oid)`  | Detach HEAD at a specific commit             |
+| `state`                 | Get repository state (normal, merging, etc.) |
+| `stateCleanup()`        | Clean up repository state after merge/revert |
 
 Branch operations:
 
-| Method                         | Description                              |
-| ------------------------------ | ---------------------------------------- |
-| `listBranches(type?)`          | List local and/or remote branches        |
-| `createBranch(name, target)`   | Create a new branch                      |
-| `deleteBranch(name)`           | Delete a branch                          |
+| Method                       | Description                       |
+| ---------------------------- | --------------------------------- |
+| `listBranches(type?)`        | List local and/or remote branches |
+| `createBranch(name, target)` | Create a new branch               |
+| `deleteBranch(name)`         | Delete a branch                   |
 
 Commit operations:
 
-| Method                     | Description                                  |
-| -------------------------- | -------------------------------------------- |
-| `lookupCommit(oid)`        | Find a commit by its OID                     |
-| `walkCommits(start?, max?)`| Generator to walk commit history             |
-| `getCommits(start?, max?)` | Get commits as an array                      |
+| Method                      | Description                      |
+| --------------------------- | -------------------------------- |
+| `lookupCommit(oid)`         | Find a commit by its OID         |
+| `walkCommits(start?, max?)` | Generator to walk commit history |
+| `getCommits(start?, max?)`  | Get commits as an array          |
 
 Status and references:
 
-| Method                | Description                                      |
-| --------------------- | ------------------------------------------------ |
-| `status()`            | Get working directory status                     |
-| `listReferences()`    | List all references                              |
-| `lookupReference()`   | Look up a reference by name                      |
-| `resolveReference()`  | Resolve a symbolic reference                     |
+| Method               | Description                  |
+| -------------------- | ---------------------------- |
+| `status()`           | Get working directory status |
+| `listReferences()`   | List all references          |
+| `lookupReference()`  | Look up a reference by name  |
+| `resolveReference()` | Resolve a symbolic reference |
 
 ### Index Class
 
-| Method                       | Description                             |
-| ---------------------------- | --------------------------------------- |
-| `Index.fromRepository(repo)` | Get the index for a repository          |
-| `add(path)`                  | Stage a file                            |
-| `addAll(paths)`              | Stage multiple files                    |
-| `remove(path)`               | Unstage a file                          |
-| `write()`                    | Write index changes to disk             |
-| `writeTree()`                | Create a tree object from the index     |
-| `entries()`                  | Get all entries in the index            |
-| `hasConflicts`               | Check if index has conflicts            |
+| Method                       | Description                         |
+| ---------------------------- | ----------------------------------- |
+| `Index.fromRepository(repo)` | Get the index for a repository      |
+| `add(path)`                  | Stage a file                        |
+| `addAll(paths)`              | Stage multiple files                |
+| `remove(path)`               | Unstage a file                      |
+| `write()`                    | Write index changes to disk         |
+| `writeTree()`                | Create a tree object from the index |
+| `entries()`                  | Get all entries in the index        |
+| `hasConflicts`               | Check if index has conflicts        |
 
 ### Implemented Features
 
 #### Core Operations
+
 - **Repository**: init, open, discover, clone, state management
 - **Commits**: create, lookup, amend, walk history, parents
 - **Branches**: create, delete, list, rename, upstream tracking
@@ -329,6 +339,7 @@ Status and references:
 - **Status**: working directory and index status
 
 #### Advanced Operations
+
 - **Merge**: merge analysis, merge commits, merge base, conflict detection
 - **Rebase**: init, open, next, commit, abort, finish
 - **Cherry-pick**: cherry-pick commits with options
@@ -340,6 +351,7 @@ Status and references:
 - **Stash**: save, apply, pop, drop, list
 
 #### Repository Features
+
 - **Tags**: create (annotated and lightweight), delete, list, lookup
 - **Remotes**: create, lookup, list, rename, delete, set URLs
 - **Worktrees**: add, list, lookup, lock, unlock, prune
@@ -348,6 +360,7 @@ Status and references:
 - **Reflog**: read, delete, rename
 
 #### Utilities
+
 - **Notes**: create, read, remove, list
 - **Describe**: describe commits and workdir
 - **Graph**: ahead/behind, descendant checking

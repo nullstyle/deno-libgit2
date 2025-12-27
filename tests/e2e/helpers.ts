@@ -5,7 +5,13 @@
  * and performing real file operations for integration testing.
  */
 
-import { createCommit, type GitLibrary, Index, initGit, Repository } from "../../mod.ts";
+import {
+  createCommit,
+  type GitLibrary,
+  Index,
+  initGit,
+  Repository,
+} from "../../mod.ts";
 
 /** Options for creating a test context */
 export interface TestContextOptions {

@@ -17,11 +17,7 @@ import {
   setupLibrary,
 } from "./helpers.ts";
 
-import {
-  type BlameHunk,
-  GitBlameFlags,
-  Repository,
-} from "../../mod.ts";
+import { type BlameHunk, GitBlameFlags, Repository } from "../../mod.ts";
 
 Deno.test({
   name: "E2E Blame Tests",

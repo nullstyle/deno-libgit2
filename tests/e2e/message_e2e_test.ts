@@ -135,14 +135,17 @@ Just a body with no trailers.
     assertEquals(typeof result, "string");
   });
 
-  await t.step("prettify message - with default stripComments false", async () => {
-    await using _ctx = await createTestContext();
-    const message = "Line 1\n# Comment\nLine 2\n";
-    const result = prettifyMessage(message);
+  await t.step(
+    "prettify message - with default stripComments false",
+    async () => {
+      await using _ctx = await createTestContext();
+      const message = "Line 1\n# Comment\nLine 2\n";
+      const result = prettifyMessage(message);
 
-    // Default is false, so comments should be kept
-    assertEquals(result.includes("# Comment"), true);
-  });
+      // Default is false, so comments should be kept
+      assertEquals(result.includes("# Comment"), true);
+    },
+  );
 
   await t.step("prettify message - custom comment char @", async () => {
     await using _ctx = await createTestContext();

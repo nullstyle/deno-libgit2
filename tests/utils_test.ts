@@ -686,7 +686,10 @@ Deno.test("Utils Tests", async (t) => {
 
     assertEquals(result.stringBuffers.length, 6);
     for (let i = 0; i < strings.length; i++) {
-      assertEquals(result.stringBuffers[i][result.stringBuffers[i].length - 1], 0);
+      assertEquals(
+        result.stringBuffers[i][result.stringBuffers[i].length - 1],
+        0,
+      );
     }
   });
 
@@ -811,14 +814,18 @@ Deno.test("Utils Tests", async (t) => {
   await t.step("toCString with newlines", () => {
     const result = toCString("line1\nline2\nline3");
     assertEquals(result[result.length - 1], 0);
-    const decoded = new TextDecoder().decode(result.subarray(0, result.length - 1));
+    const decoded = new TextDecoder().decode(
+      result.subarray(0, result.length - 1),
+    );
     assertEquals(decoded, "line1\nline2\nline3");
   });
 
   await t.step("toCString with tabs and special chars", () => {
     const result = toCString("col1\tcol2\tcol3");
     assertEquals(result[result.length - 1], 0);
-    const decoded = new TextDecoder().decode(result.subarray(0, result.length - 1));
+    const decoded = new TextDecoder().decode(
+      result.subarray(0, result.length - 1),
+    );
     assertEquals(decoded, "col1\tcol2\tcol3");
   });
 
@@ -889,7 +896,10 @@ Deno.test("Utils Tests", async (t) => {
 
     if (POINTER_SIZE === 8) {
       assertEquals(readPointerValueFromPtrView(ptrView, 0), 0x123456789ABCDEFn);
-      assertEquals(readPointerValueFromPtrView(ptrView, 8), 0xFEDCBA9876543210n);
+      assertEquals(
+        readPointerValueFromPtrView(ptrView, 8),
+        0xFEDCBA9876543210n,
+      );
     }
   });
 

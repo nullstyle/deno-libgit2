@@ -14,160 +14,158 @@ Deno.test("E2E Revert Tests", async (t) => {
   using _git = await setupLibrary();
 
   await t.step("revert commit to index", async () => {
-      await using ctx = await createTestContext({ withInitialCommit: true });
-      // Create initial commit
-      await createCommitWithFiles(ctx, "Initial", {
-        "file.txt": "initial\n",
-      });
-      const _baseOid = ctx.repo.headOid();
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    // Create initial commit
+    await createCommitWithFiles(ctx, "Initial", {
+      "file.txt": "initial\n",
+    });
+    const _baseOid = ctx.repo.headOid();
 
-      // Add a commit that we'll revert
-      await createCommitWithFiles(ctx, "Add feature", {
-        "feature.txt": "feature content\n",
-      });
-      const featureOid = ctx.repo.headOid();
+    // Add a commit that we'll revert
+    await createCommitWithFiles(ctx, "Add feature", {
+      "feature.txt": "feature content\n",
+    });
+    const featureOid = ctx.repo.headOid();
 
-      // Revert the feature commit to index
-      const index = ctx.repo.revertCommit(featureOid, featureOid);
-      assertExists(index, "Should return an index");
+    // Revert the feature commit to index
+    const index = ctx.repo.revertCommit(featureOid, featureOid);
+    assertExists(index, "Should return an index");
 
-      // The index should contain the revert result
-      const entryCount = index.entryCount;
-      assertExists(entryCount, "Index should have entries");
+    // The index should contain the revert result
+    const entryCount = index.entryCount;
+    assertExists(entryCount, "Index should have entries");
 
-      index.free();
+    index.free();
+  });
+
+  await t.step("revert modifies working directory", async () => {
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    // Create initial commit
+    await createCommitWithFiles(ctx, "Initial", {
+      "file.txt": "initial\n",
     });
 
-    await t.step("revert modifies working directory", async () => {
-      await using ctx = await createTestContext({ withInitialCommit: true });
-      // Create initial commit
-      await createCommitWithFiles(ctx, "Initial", {
-        "file.txt": "initial\n",
-      });
+    // Add a commit that we'll revert
+    await createCommitWithFiles(ctx, "Add feature", {
+      "feature.txt": "feature content\n",
+    });
+    const featureOid = ctx.repo.headOid();
 
-      // Add a commit that we'll revert
-      await createCommitWithFiles(ctx, "Add feature", {
-        "feature.txt": "feature content\n",
-      });
-      const featureOid = ctx.repo.headOid();
+    // Verify file exists before revert
+    const filePath = `${ctx.repoPath}/feature.txt`;
+    let fileExists = await Deno.stat(filePath).then(() => true).catch(() =>
+      false
+    );
+    assert(fileExists, "Feature file should exist before revert");
 
-      // Verify file exists before revert
-      const filePath = `${ctx.repoPath}/feature.txt`;
-      let fileExists = await Deno.stat(filePath).then(() => true).catch(() =>
-        false
-      );
-      assert(fileExists, "Feature file should exist before revert");
+    // Revert the feature commit (modifies working directory)
+    ctx.repo.revert(featureOid);
 
-      // Revert the feature commit (modifies working directory)
-      ctx.repo.revert(featureOid);
+    // Verify the file is removed in working directory
+    fileExists = await Deno.stat(filePath).then(() => true).catch(() => false);
+    assert(!fileExists, "Feature file should be removed after revert");
+  });
 
-      // Verify the file is removed in working directory
-      fileExists = await Deno.stat(filePath).then(() => true).catch(() =>
-        false
-      );
-      assert(!fileExists, "Feature file should be removed after revert");
+  await t.step("revert file modification", async () => {
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    // Create initial commit with a file
+    await createCommitWithFiles(ctx, "Initial", {
+      "file.txt": "original content\n",
     });
 
-    await t.step("revert file modification", async () => {
-      await using ctx = await createTestContext({ withInitialCommit: true });
-      // Create initial commit with a file
-      await createCommitWithFiles(ctx, "Initial", {
-        "file.txt": "original content\n",
-      });
+    // Modify the file
+    await createCommitWithFiles(ctx, "Modify file", {
+      "file.txt": "modified content\n",
+    });
+    const modifyOid = ctx.repo.headOid();
 
-      // Modify the file
-      await createCommitWithFiles(ctx, "Modify file", {
-        "file.txt": "modified content\n",
-      });
-      const modifyOid = ctx.repo.headOid();
+    // Verify modified content
+    let content = await Deno.readTextFile(`${ctx.repoPath}/file.txt`);
+    assertEquals(content, "modified content\n");
 
-      // Verify modified content
-      let content = await Deno.readTextFile(`${ctx.repoPath}/file.txt`);
-      assertEquals(content, "modified content\n");
+    // Revert the modification
+    ctx.repo.revert(modifyOid);
 
-      // Revert the modification
-      ctx.repo.revert(modifyOid);
+    // Verify content is reverted
+    content = await Deno.readTextFile(`${ctx.repoPath}/file.txt`);
+    assertEquals(content, "original content\n");
+  });
 
-      // Verify content is reverted
-      content = await Deno.readTextFile(`${ctx.repoPath}/file.txt`);
-      assertEquals(content, "original content\n");
+  await t.step("revert detects conflicts", async () => {
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    // Create initial commit
+    await createCommitWithFiles(ctx, "Initial", {
+      "file.txt": "initial\n",
     });
 
-    await t.step("revert detects conflicts", async () => {
-      await using ctx = await createTestContext({ withInitialCommit: true });
-      // Create initial commit
-      await createCommitWithFiles(ctx, "Initial", {
-        "file.txt": "initial\n",
-      });
+    // Add a commit that modifies the file
+    await createCommitWithFiles(ctx, "First change", {
+      "file.txt": "first change\n",
+    });
+    const firstOid = ctx.repo.headOid();
 
-      // Add a commit that modifies the file
-      await createCommitWithFiles(ctx, "First change", {
-        "file.txt": "first change\n",
-      });
-      const firstOid = ctx.repo.headOid();
+    // Add another commit that modifies the same file differently
+    await createCommitWithFiles(ctx, "Second change", {
+      "file.txt": "second change\n",
+    });
+    const secondOid = ctx.repo.headOid();
 
-      // Add another commit that modifies the same file differently
-      await createCommitWithFiles(ctx, "Second change", {
-        "file.txt": "second change\n",
-      });
-      const secondOid = ctx.repo.headOid();
+    // Revert the first commit should cause conflict
+    const index = ctx.repo.revertCommit(firstOid, secondOid);
+    assertExists(index, "Should return an index");
 
-      // Revert the first commit should cause conflict
-      const index = ctx.repo.revertCommit(firstOid, secondOid);
-      assertExists(index, "Should return an index");
+    // Check if there are conflicts
+    const hasConflicts = index.hasConflicts;
+    assert(hasConflicts, "Index should have conflicts");
 
-      // Check if there are conflicts
-      const hasConflicts = index.hasConflicts;
-      assert(hasConflicts, "Index should have conflicts");
+    index.free();
+  });
 
-      index.free();
+  await t.step("revert non-existent commit throws error", async () => {
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    await createCommitWithFiles(ctx, "Initial", {
+      "file.txt": "initial\n",
+    });
+    const baseOid = ctx.repo.headOid();
+
+    const fakeOid = "0000000000000000000000000000000000000000";
+
+    let threw = false;
+    try {
+      ctx.repo.revertCommit(fakeOid, baseOid);
+    } catch {
+      threw = true;
+    }
+    assert(threw, "Should throw error for non-existent commit");
+  });
+
+  await t.step("revert to index preserves working directory", async () => {
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    // Create initial commit
+    await createCommitWithFiles(ctx, "Initial", {
+      "file.txt": "initial\n",
     });
 
-    await t.step("revert non-existent commit throws error", async () => {
-      await using ctx = await createTestContext({ withInitialCommit: true });
-      await createCommitWithFiles(ctx, "Initial", {
-        "file.txt": "initial\n",
-      });
-      const baseOid = ctx.repo.headOid();
-
-      const fakeOid = "0000000000000000000000000000000000000000";
-
-      let threw = false;
-      try {
-        ctx.repo.revertCommit(fakeOid, baseOid);
-      } catch {
-        threw = true;
-      }
-      assert(threw, "Should throw error for non-existent commit");
+    // Add a feature
+    await createCommitWithFiles(ctx, "Add feature", {
+      "feature.txt": "feature\n",
     });
+    const featureOid = ctx.repo.headOid();
 
-    await t.step("revert to index preserves working directory", async () => {
-      await using ctx = await createTestContext({ withInitialCommit: true });
-      // Create initial commit
-      await createCommitWithFiles(ctx, "Initial", {
-        "file.txt": "initial\n",
-      });
+    // Revert to index only (doesn't modify working directory)
+    const index = ctx.repo.revertCommit(featureOid, featureOid);
+    assertExists(index, "Should return an index");
 
-      // Add a feature
-      await createCommitWithFiles(ctx, "Add feature", {
-        "feature.txt": "feature\n",
-      });
-      const featureOid = ctx.repo.headOid();
+    // Working directory should still have the file
+    const filePath = `${ctx.repoPath}/feature.txt`;
+    const fileExists = await Deno.stat(filePath).then(() => true).catch(
+      () => false,
+    );
+    assert(
+      fileExists,
+      "File should still exist in working directory after revertCommit",
+    );
 
-      // Revert to index only (doesn't modify working directory)
-      const index = ctx.repo.revertCommit(featureOid, featureOid);
-      assertExists(index, "Should return an index");
-
-      // Working directory should still have the file
-      const filePath = `${ctx.repoPath}/feature.txt`;
-      const fileExists = await Deno.stat(filePath).then(() => true).catch(
-        () => false,
-      );
-      assert(
-        fileExists,
-        "File should still exist in working directory after revertCommit",
-      );
-
-      index.free();
-    });
+    index.free();
+  });
 });

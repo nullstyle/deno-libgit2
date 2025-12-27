@@ -5,12 +5,7 @@
  * and tree writing using real git repositories in temporary directories.
  */
 
-import {
-  createFile,
-  createTestContext,
-  deleteFile,
-  setupLibrary,
-} from "./helpers.ts";
+import { createFile, createTestContext, setupLibrary } from "./helpers.ts";
 import { Index, Repository } from "../../mod.ts";
 import {
   assertEquals,
