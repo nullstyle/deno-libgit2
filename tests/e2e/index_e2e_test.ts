@@ -400,6 +400,92 @@ Deno.test({
       assertEquals(index.isClosed, true);
     });
 
+    await t.step("read() with force=true re-reads from disk", async () => {
+      await using ctx = await createTestContext();
+      await createFile(ctx.repoPath, "file.txt", "content");
+
+      using index = Index.fromRepository(ctx.repo);
+      index.add("file.txt");
+      index.write();
+
+      // Force read even if up to date
+      index.read(true);
+      assertEquals(index.entryCount, 1);
+    });
+
+    await t.step("read() with force=false (default)", async () => {
+      await using ctx = await createTestContext();
+      await createFile(ctx.repoPath, "file.txt", "content");
+
+      using index = Index.fromRepository(ctx.repo);
+      index.add("file.txt");
+      index.write();
+
+      // Default read (force=false)
+      index.read();
+      assertEquals(index.entryCount, 1);
+    });
+
+    await t.step("Symbol.dispose works correctly", async () => {
+      await using ctx = await createTestContext();
+      await createFile(ctx.repoPath, "dispose.txt", "content");
+
+      {
+        using index = Index.fromRepository(ctx.repo);
+        index.add("dispose.txt");
+        index.write();
+        assertEquals(index.entryCount, 1);
+      }
+      // index is automatically disposed here
+    });
+
+    await t.step("getByIndex returns entry with all properties", async () => {
+      await using ctx = await createTestContext();
+      await createFile(ctx.repoPath, "props.txt", "content with data");
+
+      using index = Index.fromRepository(ctx.repo);
+      index.add("props.txt");
+      index.write();
+
+      const entry = index.getByIndex(0);
+      assertExists(entry);
+      assertEquals(entry.path, "props.txt");
+      assertEquals(entry.oid.length, 40);
+      assertEquals(typeof entry.mode, "number");
+      assertEquals(typeof entry.fileSize, "number");
+      assertEquals(entry.stage, 0);
+    });
+
+    await t.step("entries() returns empty array for empty index", async () => {
+      await using ctx = await createTestContext();
+      using index = Index.fromRepository(ctx.repo);
+
+      const entries = index.entries();
+      assertEquals(entries.length, 0);
+    });
+
+    await t.step("Index iteration on empty index", async () => {
+      await using ctx = await createTestContext();
+      using index = Index.fromRepository(ctx.repo);
+
+      const paths: string[] = [];
+      for (const entry of index) {
+        paths.push(entry.path);
+      }
+      assertEquals(paths.length, 0);
+    });
+
+    await t.step("hasConflicts returns false for clean index", async () => {
+      await using ctx = await createTestContext();
+      await createFile(ctx.repoPath, "clean.txt", "content");
+
+      using index = Index.fromRepository(ctx.repo);
+      index.add("clean.txt");
+      index.write();
+
+      assertFalse(index.hasConflicts);
+    });
+
     await t.step("Index entry has correct properties", async () => {
       await using ctx = await createTestContext();
       await createFile(ctx.repoPath, "test.txt", "test content here");

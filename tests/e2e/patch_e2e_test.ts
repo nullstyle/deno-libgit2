@@ -522,6 +522,226 @@ Deno.test("E2E Patch Tests", async (t) => {
 
       diff.free();
     });
+
+    // ==================== Additional Coverage Tests ====================
+
+    await t.step("patch line stats has context lines", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "line1\nline2\nline3\nline4\nline5\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      await createCommitWithFiles(ctx, "Modified", {
+        "file.txt": "line1\nline2\nMODIFIED\nline4\nline5\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      const patch = ctx.repo.patchFromDiff(diff, 0);
+      assertExists(patch);
+
+      const stats = patch.lineStats;
+      // Context should be the surrounding unchanged lines
+      assert(stats.context >= 0);
+      assert(stats.additions >= 1);
+      assert(stats.deletions >= 1);
+
+      patch.free();
+      diff.free();
+    });
+
+    await t.step("patch delta has file OIDs", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "initial\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      await createCommitWithFiles(ctx, "Modified", {
+        "file.txt": "modified\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      const patch = ctx.repo.patchFromDiff(diff, 0);
+      assertExists(patch);
+
+      const delta = patch.getDelta();
+      // Both old and new files should have OIDs
+      assertExists(delta.oldFile.oid);
+      assertExists(delta.newFile.oid);
+      assertEquals(delta.oldFile.oid.length, 40);
+      assertEquals(delta.newFile.oid.length, 40);
+
+      patch.free();
+      diff.free();
+    });
+
+    await t.step("patch delta file has size property", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "some content here\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      await createCommitWithFiles(ctx, "Modified", {
+        "file.txt": "different content\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      const patch = ctx.repo.patchFromDiff(diff, 0);
+      assertExists(patch);
+
+      const delta = patch.getDelta();
+      // Size should be a bigint
+      assertEquals(typeof delta.oldFile.size, "bigint");
+      assertEquals(typeof delta.newFile.size, "bigint");
+
+      patch.free();
+      diff.free();
+    });
+
+    await t.step("patch delta file has mode property", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "content\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      await createCommitWithFiles(ctx, "Modified", {
+        "file.txt": "modified content\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      const patch = ctx.repo.patchFromDiff(diff, 0);
+      assertExists(patch);
+
+      const delta = patch.getDelta();
+      // Mode should be a number
+      assertEquals(typeof delta.oldFile.mode, "number");
+      assertEquals(typeof delta.newFile.mode, "number");
+
+      patch.free();
+      diff.free();
+    });
+
+    await t.step("patch delta file has flags property", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "content\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      await createCommitWithFiles(ctx, "Modified", {
+        "file.txt": "modified\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      const patch = ctx.repo.patchFromDiff(diff, 0);
+      assertExists(patch);
+
+      const delta = patch.getDelta();
+      assertEquals(typeof delta.oldFile.flags, "number");
+      assertEquals(typeof delta.newFile.flags, "number");
+
+      patch.free();
+      diff.free();
+    });
+
+    await t.step("patch line stats shows 0 for new file with only additions", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "content\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      // Add a new file
+      await createCommitWithFiles(ctx, "Add new file", {
+        "file.txt": "content\n",
+        "newfile.txt": "new content\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      assertEquals(diff.numDeltas, 1);
+
+      const patch = ctx.repo.patchFromDiff(diff, 0);
+      assertExists(patch);
+
+      const stats = patch.lineStats;
+      // New file - should have additions, no deletions
+      assert(stats.additions >= 1);
+      assertEquals(stats.deletions, 0);
+
+      patch.free();
+      diff.free();
+    });
+
+    await t.step("patch toString includes diff header", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file.txt": "initial\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      await createCommitWithFiles(ctx, "Modified", {
+        "file.txt": "modified\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      const patch = ctx.repo.patchFromDiff(diff, 0);
+      assertExists(patch);
+
+      const patchStr = patch.toString();
+      // Standard diff format includes these headers
+      assert(patchStr.includes("diff --git"));
+      assert(patchStr.includes("---"));
+      assert(patchStr.includes("+++"));
+      assert(patchStr.includes("@@"));
+
+      patch.free();
+      diff.free();
+    });
+
+    await t.step("multiple patches from single diff", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Initial", {
+        "file1.txt": "content1\n",
+        "file2.txt": "content2\n",
+      });
+      const firstOid = ctx.repo.headOid();
+
+      await createCommitWithFiles(ctx, "Modified", {
+        "file1.txt": "modified1\n",
+        "file2.txt": "modified2\n",
+      });
+      const secondOid = ctx.repo.headOid();
+
+      const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+      assertEquals(diff.numDeltas, 2);
+
+      const patch1 = ctx.repo.patchFromDiff(diff, 0);
+      const patch2 = ctx.repo.patchFromDiff(diff, 1);
+
+      assertExists(patch1);
+      assertExists(patch2);
+
+      const delta1 = patch1.getDelta();
+      const delta2 = patch2.getDelta();
+
+      // Both patches should have valid deltas
+      assertExists(delta1.oldFile.path);
+      assertExists(delta2.oldFile.path);
+
+      patch1.free();
+      patch2.free();
+      diff.free();
+    });
   } finally {
     shutdown();
   }

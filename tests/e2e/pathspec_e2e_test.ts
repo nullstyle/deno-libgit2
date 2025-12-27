@@ -2,7 +2,12 @@
  * End-to-end tests for pathspec operations
  */
 
-import { assertEquals, assertExists, assertGreater } from "@std/assert";
+import {
+  assertEquals,
+  assertExists,
+  assertGreater,
+  assertThrows,
+} from "@std/assert";
 import { createCommitWithFiles, createTestContext } from "./helpers.ts";
 import { GitPathspecFlags, Index, init, shutdown } from "../../mod.ts";
 
@@ -359,6 +364,211 @@ Deno.test("E2E Pathspec Tests", async (t) => {
     }
 
     ps.free();
+  });
+
+  await t.step("Pathspec ptr getter returns valid pointer", async () => {
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    const ps = ctx.repo.createPathspec(["*.txt"]);
+
+    const ptr = ps.ptr;
+    assertExists(ptr);
+
+    ps.free();
+  });
+
+  await t.step(
+    "PathspecMatchList ptr getter returns valid pointer",
+    async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Add file", {
+        "test.txt": "content\n",
+      });
+
+      const ps = ctx.repo.createPathspec(["*.txt"]);
+      const matchList = ps.matchWorkdir({ ptr: ctx.repo.pointer });
+
+      const ptr = matchList.ptr;
+      assertExists(ptr);
+
+      matchList.free();
+      ps.free();
+    },
+  );
+
+  await t.step("Pathspec double free is safe", async () => {
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    const ps = ctx.repo.createPathspec(["*.txt"]);
+
+    // First free
+    ps.free();
+
+    // Second free should be safe (no-op)
+    ps.free();
+  });
+
+  await t.step("PathspecMatchList double free is safe", async () => {
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    await createCommitWithFiles(ctx, "Add file", {
+      "test.txt": "content\n",
+    });
+
+    const ps = ctx.repo.createPathspec(["*.txt"]);
+    const matchList = ps.matchWorkdir({ ptr: ctx.repo.pointer });
+
+    // First free
+    matchList.free();
+
+    // Second free should be safe (no-op)
+    matchList.free();
+
+    ps.free();
+  });
+
+  await t.step("Pathspec throws after freed", async () => {
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    const ps = ctx.repo.createPathspec(["*.txt"]);
+
+    ps.free();
+
+    assertThrows(
+      () => ps.matchesPath("file.txt"),
+      Error,
+      "freed",
+    );
+  });
+
+  await t.step("PathspecMatchList throws after freed", async () => {
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    await createCommitWithFiles(ctx, "Add file", {
+      "test.txt": "content\n",
+    });
+
+    const ps = ctx.repo.createPathspec(["*.txt"]);
+    const matchList = ps.matchWorkdir({ ptr: ctx.repo.pointer });
+
+    matchList.free();
+
+    assertThrows(
+      () => matchList.entryCount,
+      Error,
+      "freed",
+    );
+
+    ps.free();
+  });
+
+  await t.step("matchDiff finds files in diff", async () => {
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    // Create first commit
+    await createCommitWithFiles(ctx, "Initial", {
+      "file1.txt": "content1\n",
+    });
+    const firstOid = ctx.repo.headOid();
+
+    // Create second commit with changes
+    await createCommitWithFiles(ctx, "Modified", {
+      "file1.txt": "modified1\n",
+    });
+    const secondOid = ctx.repo.headOid();
+
+    // Get diff
+    const diff = ctx.repo.diffTreeToTree(firstOid, secondOid);
+    assertExists(diff);
+
+    // Match all files in the diff
+    const ps = ctx.repo.createPathspec(["*"]);
+    const matchList = ps.matchDiff({ ptr: diff.ptr });
+
+    assertExists(matchList);
+    // matchDiff should work without throwing
+    const count = matchList.entryCount;
+    assertEquals(typeof count, "number");
+
+    matchList.free();
+    ps.free();
+    diff.free();
+  });
+
+  await t.step("failedEntry returns null for out of range", async () => {
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    await createCommitWithFiles(ctx, "Add file", {
+      "test.txt": "content\n",
+    });
+
+    const ps = ctx.repo.createPathspec(["*.txt"]);
+    const matchList = ps.matchWorkdir(
+      { ptr: ctx.repo.pointer },
+      GitPathspecFlags.FIND_FAILURES,
+    );
+
+    // Try to get failed entry at out of range index
+    const outOfRange = matchList.failedEntry(999);
+    assertEquals(outOfRange, null);
+
+    matchList.free();
+    ps.free();
+  });
+
+  await t.step("entry returns null for out of range", async () => {
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    await createCommitWithFiles(ctx, "Add file", {
+      "test.txt": "content\n",
+    });
+
+    const ps = ctx.repo.createPathspec(["*.txt"]);
+    const matchList = ps.matchWorkdir({ ptr: ctx.repo.pointer });
+
+    // Try to get entry at out of range index
+    const outOfRange = matchList.entry(999);
+    assertEquals(outOfRange, null);
+
+    matchList.free();
+    ps.free();
+  });
+
+  await t.step("matchWorkdir throws after pathspec freed", async () => {
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    const ps = ctx.repo.createPathspec(["*.txt"]);
+
+    ps.free();
+
+    assertThrows(
+      () => ps.matchWorkdir({ ptr: ctx.repo.pointer }),
+      Error,
+      "freed",
+    );
+  });
+
+  await t.step("matchIndex throws after pathspec freed", async () => {
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    const ps = ctx.repo.createPathspec(["*.txt"]);
+    const index = Index.fromRepository(ctx.repo);
+
+    ps.free();
+
+    assertThrows(
+      () => ps.matchIndex({ ptr: index.pointer }),
+      Error,
+      "freed",
+    );
+
+    index.close();
+  });
+
+  await t.step("matchTree throws after pathspec freed", async () => {
+    await using ctx = await createTestContext({ withInitialCommit: true });
+    const commitOid = await createCommitWithFiles(ctx, "Commit", {
+      "test.txt": "content\n",
+    });
+
+    const ps = ctx.repo.createPathspec(["*.txt"]);
+    ps.free();
+
+    assertThrows(
+      () => ps.matchTree({ ptr: ctx.repo.pointer }, commitOid),
+      Error,
+      "freed",
+    );
   });
 
   shutdown();

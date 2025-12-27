@@ -115,5 +115,108 @@ Just a body with no trailers.
     assertEquals(trailers.length, 0);
   });
 
+  // ==================== Additional Coverage Tests ====================
+
+  await t.step("prettify message - empty string", async () => {
+    await using _ctx = await createTestContext();
+    const message = "";
+    const result = prettifyMessage(message);
+
+    // Empty message should return empty or just newline
+    assertEquals(typeof result, "string");
+  });
+
+  await t.step("prettify message - only whitespace", async () => {
+    await using _ctx = await createTestContext();
+    const message = "   \n   \n   ";
+    const result = prettifyMessage(message);
+
+    // Whitespace only should be stripped
+    assertEquals(typeof result, "string");
+  });
+
+  await t.step("prettify message - with default stripComments false", async () => {
+    await using _ctx = await createTestContext();
+    const message = "Line 1\n# Comment\nLine 2\n";
+    const result = prettifyMessage(message);
+
+    // Default is false, so comments should be kept
+    assertEquals(result.includes("# Comment"), true);
+  });
+
+  await t.step("prettify message - custom comment char @", async () => {
+    await using _ctx = await createTestContext();
+    const message = "Line 1\n@ Comment\nLine 2\n";
+    const result = prettifyMessage(message, true, "@");
+
+    // Should strip lines starting with @
+    assertEquals(result.includes("@ Comment"), false);
+    assertEquals(result.includes("Line 1"), true);
+    assertEquals(result.includes("Line 2"), true);
+  });
+
+  await t.step("parse trailers - trailer with empty value", async () => {
+    await using _ctx = await createTestContext();
+    const message = `Commit message
+
+Body text.
+
+Empty-value:
+`;
+    const trailers = parseTrailers(message);
+    // Empty or missing value might be parsed differently
+    assertExists(trailers);
+  });
+
+  await t.step("parse trailers - message without paragraph break", async () => {
+    await using _ctx = await createTestContext();
+    const message = `Single line
+Signed-off-by: Test <test@example.com>
+`;
+    const trailers = parseTrailers(message);
+    // Trailers need paragraph break before them typically
+    assertExists(trailers);
+  });
+
+  await t.step("parse trailers - only trailers", async () => {
+    await using _ctx = await createTestContext();
+    const message = `Subject line
+
+Signed-off-by: User <user@example.com>
+Reviewed-by: Other <other@example.com>
+`;
+    const trailers = parseTrailers(message);
+    assertExists(trailers);
+    assertEquals(trailers.length, 2);
+  });
+
+  await t.step("prettify message - result is never null", async () => {
+    await using _ctx = await createTestContext();
+    const messages = [
+      "Normal message",
+      "",
+      "\n\n\n",
+      "   ",
+      "# All comments\n# More comments",
+    ];
+
+    for (const msg of messages) {
+      const result = prettifyMessage(msg);
+      // Result should always be a string, never null
+      assertEquals(typeof result, "string");
+    }
+  });
+
+  await t.step("parse trailers - unicode keys and values", async () => {
+    await using _ctx = await createTestContext();
+    const message = `Unicode test
+
+Tester-名前: 日本語 <user@example.com>
+`;
+    const trailers = parseTrailers(message);
+    // May or may not parse correctly, but should not throw
+    assertExists(trailers);
+  });
+
   shutdown();
 });

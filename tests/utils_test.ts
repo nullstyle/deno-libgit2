@@ -34,13 +34,18 @@ import {
   oidFromHex,
   POINTER_SIZE,
   ptrOf,
+  readGitBuf,
   readInt32,
   readInt64,
   readOidHex,
   readPointer,
   readPointerArrayValue,
   readPointerValue,
+  readPointerValueFromPtrView,
+  readSignature,
   readSizeValue,
+  readSizeValueFromPtrView,
+  readStrarray,
   readUint32,
   readUint64,
   toCString,
@@ -662,5 +667,279 @@ Deno.test("Utils Tests", async (t) => {
     const time = BigInt(2000000000); // Far future
     const result = formatGitTime(time, 0);
     assert(result.includes("2033")); // Should be in 2033
+  });
+
+  // ==================== Additional Coverage Tests ====================
+
+  await t.step("createStrarray with single string", () => {
+    const strings = ["test"];
+    const result = createStrarray(strings);
+
+    assertEquals(result.stringBuffers.length, 1);
+    assertExists(result.buffer);
+    assertExists(result.pointerArray);
+  });
+
+  await t.step("createStrarray with many strings", () => {
+    const strings = ["a", "b", "c", "d", "e", "f"];
+    const result = createStrarray(strings);
+
+    assertEquals(result.stringBuffers.length, 6);
+    for (let i = 0; i < strings.length; i++) {
+      assertEquals(result.stringBuffers[i][result.stringBuffers[i].length - 1], 0);
+    }
+  });
+
+  await t.step("readPointerValue at different offsets", () => {
+    const buffer = new Uint8Array(24);
+    const view = new DataView(buffer.buffer);
+
+    view.setBigUint64(0, 111n, true);
+    view.setBigUint64(8, 222n, true);
+    view.setBigUint64(16, 333n, true);
+
+    if (POINTER_SIZE === 8) {
+      assertEquals(readPointerValue(view, 0), 111n);
+      assertEquals(readPointerValue(view, 8), 222n);
+      assertEquals(readPointerValue(view, 16), 333n);
+    }
+  });
+
+  await t.step("writePointerValue at different offsets", () => {
+    const buffer = new Uint8Array(24);
+    const view = new DataView(buffer.buffer);
+
+    writePointerValue(view, 0, 100n);
+    writePointerValue(view, 8, 200n);
+    writePointerValue(view, 16, 300n);
+
+    if (POINTER_SIZE === 8) {
+      assertEquals(readPointerValue(view, 0), 100n);
+      assertEquals(readPointerValue(view, 8), 200n);
+      assertEquals(readPointerValue(view, 16), 300n);
+    }
+  });
+
+  await t.step("writeSizeValue with various values", () => {
+    const buffer = new Uint8Array(POINTER_SIZE);
+    const view = new DataView(buffer.buffer);
+
+    writeSizeValue(view, 0, 0n);
+    assertEquals(readSizeValue(view), 0n);
+
+    writeSizeValue(view, 0, 1n);
+    assertEquals(readSizeValue(view), 1n);
+
+    writeSizeValue(view, 0, 1000000n);
+    assertEquals(readSizeValue(view), 1000000n);
+  });
+
+  await t.step("readUint32 with offset", () => {
+    const buffer = new Uint8Array(8);
+    const view = new DataView(buffer.buffer);
+    view.setUint32(4, 0xDEADBEEF, true);
+
+    assertEquals(readUint32(buffer, 4), 0xDEADBEEF);
+  });
+
+  await t.step("readUint64 with offset", () => {
+    const buffer = new Uint8Array(16);
+    const view = new DataView(buffer.buffer);
+    view.setBigUint64(8, 0xDEADBEEFCAFEBABEn, true);
+
+    assertEquals(readUint64(buffer, 8), 0xDEADBEEFCAFEBABEn);
+  });
+
+  await t.step("readInt64 with offset", () => {
+    const buffer = new Uint8Array(16);
+    const view = new DataView(buffer.buffer);
+    view.setBigInt64(8, -123456789n, true);
+
+    assertEquals(readInt64(buffer, 8), -123456789n);
+  });
+
+  await t.step("formatGitTime with negative offset boundary", () => {
+    const time = BigInt(1700000000);
+    const offset = -720; // -12:00
+    const result = formatGitTime(time, offset);
+    assert(result.includes("-12:00"));
+  });
+
+  await t.step("formatGitTime with non-hour offset", () => {
+    const time = BigInt(1700000000);
+    const offset = 345; // +05:45 (Nepal)
+    const result = formatGitTime(time, offset);
+    assert(result.includes("+05:45"));
+  });
+
+  await t.step("createPointerArray with length 0", () => {
+    const arr = createPointerArray(0);
+    assertEquals(arr.length, 0);
+  });
+
+  await t.step("createPointerArray with length 1", () => {
+    const arr = createPointerArray(1);
+    assertEquals(arr.length, 1);
+    writePointerArrayValue(arr, 0, 42n);
+    assertEquals(readPointerArrayValue(arr, 0), 42n);
+  });
+
+  await t.step("hexToBytes with all zeros", () => {
+    const hex = "000000";
+    const bytes = hexToBytes(hex);
+    assertEquals(bytes, new Uint8Array([0, 0, 0]));
+  });
+
+  await t.step("hexToBytes with all ones (FF)", () => {
+    const hex = "ffffff";
+    const bytes = hexToBytes(hex);
+    assertEquals(bytes, new Uint8Array([0xFF, 0xFF, 0xFF]));
+  });
+
+  await t.step("bytesToHex with all zeros", () => {
+    const bytes = new Uint8Array([0, 0, 0]);
+    const hex = bytesToHex(bytes);
+    assertEquals(hex, "000000");
+  });
+
+  await t.step("bytesToHex with all ones", () => {
+    const bytes = new Uint8Array([0xFF, 0xFF, 0xFF]);
+    const hex = bytesToHex(bytes);
+    assertEquals(hex, "ffffff");
+  });
+
+  await t.step("toCString with newlines", () => {
+    const result = toCString("line1\nline2\nline3");
+    assertEquals(result[result.length - 1], 0);
+    const decoded = new TextDecoder().decode(result.subarray(0, result.length - 1));
+    assertEquals(decoded, "line1\nline2\nline3");
+  });
+
+  await t.step("toCString with tabs and special chars", () => {
+    const result = toCString("col1\tcol2\tcol3");
+    assertEquals(result[result.length - 1], 0);
+    const decoded = new TextDecoder().decode(result.subarray(0, result.length - 1));
+    assertEquals(decoded, "col1\tcol2\tcol3");
+  });
+
+  await t.step("oidFromHex with mixed case input", () => {
+    const hex = "0123456789ABCDEFabcdef0123456789ABCDEF01";
+    const oid = oidFromHex(hex);
+    assertEquals(oid.length, 20);
+    // Verify round-trip
+    const hexBack = bytesToHex(oid);
+    assertEquals(hexBack, hex.toLowerCase());
+  });
+
+  await t.step("isError with boundary values", () => {
+    assertEquals(isError(-1), true);
+    assertEquals(isError(0), false);
+    assertEquals(isError(1), false);
+  });
+
+  await t.step("isSuccess with boundary values", () => {
+    assertEquals(isSuccess(-1), false);
+    assertEquals(isSuccess(0), true);
+    assertEquals(isSuccess(1), true);
+  });
+
+  // ==================== readStrarray Tests ====================
+
+  await t.step("readStrarray returns empty array for null pointer", () => {
+    const result = readStrarray(null);
+    assertEquals(result, []);
+  });
+
+  // ==================== readGitBuf Tests ====================
+
+  await t.step("readGitBuf returns null for zero pointer in buffer", () => {
+    const buf = createGitBuf();
+    // Buffer is all zeros (null pointer, 0 size)
+    const result = readGitBuf(buf);
+    assertEquals(result, null);
+  });
+
+  await t.step("readGitBuf returns null for zero size", () => {
+    const buf = createGitBuf();
+    // Set some non-zero pointer but zero size
+    const view = new DataView(buf.buffer);
+    writePointerValue(view, 0, 0x12345678n);
+    writeSizeValue(view, POINTER_SIZE * 2, 0n);
+    const result = readGitBuf(buf);
+    assertEquals(result, null);
+  });
+
+  // ==================== readSignature Tests ====================
+
+  await t.step("readSignature returns null for null pointer", () => {
+    const result = readSignature(null);
+    assertEquals(result, null);
+  });
+
+  // ==================== readPointerValueFromPtrView Tests ====================
+
+  await t.step("readPointerValueFromPtrView works", () => {
+    const buffer = new Uint8Array(16);
+    const view = new DataView(buffer.buffer);
+    view.setBigUint64(0, 0x123456789ABCDEFn, true);
+    view.setBigUint64(8, 0xFEDCBA9876543210n, true);
+
+    const ptr = ptrOf(buffer);
+    const ptrView = new Deno.UnsafePointerView(ptr);
+
+    if (POINTER_SIZE === 8) {
+      assertEquals(readPointerValueFromPtrView(ptrView, 0), 0x123456789ABCDEFn);
+      assertEquals(readPointerValueFromPtrView(ptrView, 8), 0xFEDCBA9876543210n);
+    }
+  });
+
+  // ==================== readSizeValueFromPtrView Tests ====================
+
+  await t.step("readSizeValueFromPtrView works", () => {
+    const buffer = new Uint8Array(16);
+    const view = new DataView(buffer.buffer);
+    view.setBigUint64(0, 999n, true);
+
+    const ptr = ptrOf(buffer);
+    const ptrView = new Deno.UnsafePointerView(ptr);
+
+    assertEquals(readSizeValueFromPtrView(ptrView, 0), 999n);
+  });
+
+  await t.step("readSizeValueFromPtrView with offset", () => {
+    const buffer = new Uint8Array(16);
+    const view = new DataView(buffer.buffer);
+    view.setBigUint64(8, 12345n, true);
+
+    const ptr = ptrOf(buffer);
+    const ptrView = new Deno.UnsafePointerView(ptr);
+
+    assertEquals(readSizeValueFromPtrView(ptrView, 8), 12345n);
+  });
+
+  // ==================== Edge Cases for ptrOf ====================
+
+  await t.step("ptrOf with Int8Array", () => {
+    const arr = new Int8Array(8);
+    const ptr = ptrOf(arr);
+    assertExists(ptr);
+  });
+
+  await t.step("ptrOf with Int16Array", () => {
+    const arr = new Int16Array(4);
+    const ptr = ptrOf(arr);
+    assertExists(ptr);
+  });
+
+  await t.step("ptrOf with Float32Array", () => {
+    const arr = new Float32Array(4);
+    const ptr = ptrOf(arr);
+    assertExists(ptr);
+  });
+
+  await t.step("ptrOf with Float64Array", () => {
+    const arr = new Float64Array(2);
+    const ptr = ptrOf(arr);
+    assertExists(ptr);
   });
 });

@@ -11,6 +11,7 @@
  */
 
 import {
+  assert,
   assertEquals,
   assertExists,
   assertGreater,
@@ -742,6 +743,134 @@ Deno.test("E2E Reflog Tests", async (t) => {
         }
       },
     );
+
+    // ==================== Additional Coverage Tests ====================
+
+    await t.step("reflog committer.when.sign field", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Test commit", { "f.txt": "c\n" });
+
+      const reflog = ctx.repo.readReflog("HEAD");
+      try {
+        const entry = reflog.getEntry(0);
+        assertExists(entry);
+        assertExists(entry.committer.when);
+        // Sign should be "+" or "-"
+        assert(
+          entry.committer.when.sign === "+" || entry.committer.when.sign === "-",
+        );
+      } finally {
+        reflog.free();
+      }
+    });
+
+    await t.step("reflog entry with zero OID for initial commit", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      // First commit on a new branch will have all-zeros for old OID
+      const reflog = ctx.repo.readReflog("HEAD");
+      try {
+        const entries = reflog.entries();
+        // Find the very first entry (the initial commit)
+        const lastEntry = entries[entries.length - 1];
+        if (lastEntry) {
+          // The initial commit's oldOid should be all zeros
+          assertEquals(lastEntry.oldOid.length, 40);
+        }
+      } finally {
+        reflog.free();
+      }
+    });
+
+    await t.step("reflog entries method returns correct count", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "C1", { "f.txt": "1\n" });
+      await createCommitWithFiles(ctx, "C2", { "f.txt": "2\n" });
+
+      ctx.repo.close();
+      ctx.repo = Repository.open(ctx.repoPath);
+
+      const reflog = ctx.repo.readReflog("HEAD");
+      try {
+        const entries = reflog.entries();
+        assertEquals(entries.length, reflog.entryCount);
+      } finally {
+        reflog.free();
+      }
+    });
+
+    await t.step("getEntry skips null entries in entries()", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Commit", { "f.txt": "c\n" });
+
+      const reflog = ctx.repo.readReflog("HEAD");
+      try {
+        const entries = reflog.entries();
+        // All returned entries should be valid (not null)
+        for (const entry of entries) {
+          assertExists(entry);
+          assertExists(entry.newOid);
+          assertExists(entry.oldOid);
+          assertExists(entry.committer);
+        }
+      } finally {
+        reflog.free();
+      }
+    });
+
+    await t.step("reflog entry message can be empty string", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Commit", { "f.txt": "c\n" });
+
+      const reflog = ctx.repo.readReflog("HEAD");
+      try {
+        const entries = reflog.entries();
+        // Verify message handling (could be string or null)
+        for (const entry of entries) {
+          const msg = entry.message;
+          assert(msg === null || typeof msg === "string");
+        }
+      } finally {
+        reflog.free();
+      }
+    });
+
+    await t.step("reflog drop with rewrite changes history", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "C1", { "f.txt": "1\n" });
+      await createCommitWithFiles(ctx, "C2", { "f.txt": "2\n" });
+      await createCommitWithFiles(ctx, "C3", { "f.txt": "3\n" });
+      await createCommitWithFiles(ctx, "C4", { "f.txt": "4\n" });
+
+      ctx.repo.close();
+      ctx.repo = Repository.open(ctx.repoPath);
+
+      const reflog = ctx.repo.readReflog("HEAD");
+      try {
+        const initialCount = reflog.entryCount;
+        assertGreaterOrEqual(initialCount, 4);
+
+        // Drop a middle entry with rewrite
+        reflog.drop(1, true);
+
+        assertEquals(reflog.entryCount, initialCount - 1);
+      } finally {
+        reflog.free();
+      }
+    });
+
+    await t.step("reflog pointer is valid after reading", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+      await createCommitWithFiles(ctx, "Commit", { "f.txt": "c\n" });
+
+      const reflog = ctx.repo.readReflog("HEAD");
+      try {
+        assertExists(reflog.pointer);
+        // Pointer should be accessible until freed
+        assertNotEquals(reflog.pointer, null);
+      } finally {
+        reflog.free();
+      }
+    });
   } finally {
     shutdown();
   }

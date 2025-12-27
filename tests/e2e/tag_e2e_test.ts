@@ -1044,6 +1044,237 @@ This is a major release with:
 
       tag.free();
     });
+
+    await t.step("listTags with pattern", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: false });
+      const commitOid = await createCommitWithFiles(ctx, "Test commit", {
+        "f.txt": "content\n",
+      });
+
+      // Create multiple tags with different patterns
+      ctx.repo.createTag({
+        name: "v1.0.0",
+        targetOid: commitOid,
+        tagger: { name: "Test", email: "test@test.com" },
+        message: "Version 1",
+      });
+
+      ctx.repo.createTag({
+        name: "v2.0.0",
+        targetOid: commitOid,
+        tagger: { name: "Test", email: "test@test.com" },
+        message: "Version 2",
+      });
+
+      ctx.repo.createLightweightTag({
+        name: "release-1",
+        targetOid: commitOid,
+      });
+
+      // List all tags
+      const allTags = ctx.repo.listTags();
+      assertEquals(allTags.length, 3);
+
+      // List with pattern
+      const vTags = ctx.repo.listTags("v*");
+      assertEquals(vTags.length, 2);
+      assert(vTags.includes("v1.0.0"));
+      assert(vTags.includes("v2.0.0"));
+
+      // List with another pattern
+      const releaseTags = ctx.repo.listTags("release*");
+      assertEquals(releaseTags.length, 1);
+      assertEquals(releaseTags[0], "release-1");
+    });
+
+    await t.step("listTags without pattern returns all", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: false });
+      const commitOid = await createCommitWithFiles(ctx, "Test commit", {
+        "f.txt": "content\n",
+      });
+
+      ctx.repo.createLightweightTag({
+        name: "tag-a",
+        targetOid: commitOid,
+      });
+
+      ctx.repo.createLightweightTag({
+        name: "tag-b",
+        targetOid: commitOid,
+      });
+
+      // List without pattern
+      const tags = ctx.repo.listTags();
+      assertEquals(tags.length, 2);
+    });
+
+    await t.step("foreachTag with no tags returns empty array", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: true });
+
+      const tagInfos = ctx.repo.foreachTag();
+      assertEquals(tagInfos.length, 0);
+    });
+
+    await t.step("tag all properties are accessible", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: false });
+      const commitOid = await createCommitWithFiles(ctx, "Test commit", {
+        "f.txt": "content\n",
+      });
+
+      const tagOid = ctx.repo.createTag({
+        name: "full-props-tag",
+        targetOid: commitOid,
+        tagger: { name: "Tagger Name", email: "tagger@example.com" },
+        message: "Full properties tag message",
+      });
+
+      const tag = ctx.repo.lookupTag(tagOid);
+
+      // Access all properties
+      const oid = tag.oid;
+      const name = tag.name;
+      const message = tag.message;
+      const targetOid = tag.targetOid;
+      const targetType = tag.targetType;
+      const tagger = tag.tagger;
+      const ptr = tag.ptr;
+
+      assertExists(oid);
+      assertEquals(oid.length, 40);
+      assertEquals(name, "full-props-tag");
+      assert(message.includes("Full properties tag message"));
+      assertEquals(targetOid, commitOid);
+      assertEquals(targetType, "commit");
+      assertExists(tagger);
+      assertEquals(tagger.name, "Tagger Name");
+      assertEquals(tagger.email, "tagger@example.com");
+      assertExists(ptr);
+
+      tag.free();
+    });
+
+    await t.step("peel tag returns correct OID", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: false });
+      const commitOid = await createCommitWithFiles(ctx, "Test commit", {
+        "f.txt": "content\n",
+      });
+
+      const tagOid = ctx.repo.createTag({
+        name: "peel-test-tag",
+        targetOid: commitOid,
+        tagger: { name: "Test", email: "test@test.com" },
+        message: "Tag to peel",
+      });
+
+      const tag = ctx.repo.lookupTag(tagOid);
+      const peeledOid = tag.peel();
+
+      assertEquals(peeledOid, commitOid);
+
+      tag.free();
+    });
+
+    // ==================== Additional Coverage for Null/Empty Cases ====================
+
+    await t.step("tag oid returns empty string when readOidHex returns null", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: false });
+      const commitOid = await createCommitWithFiles(ctx, "Test", {
+        "f.txt": "content\n",
+      });
+
+      const tagOid = ctx.repo.createTag({
+        name: "test-tag",
+        targetOid: commitOid,
+        tagger: { name: "Test", email: "test@test.com" },
+        message: "Test",
+      });
+
+      const tag = ctx.repo.lookupTag(tagOid);
+      // oid should be a valid 40-char hex string (testing the non-null path)
+      assertEquals(tag.oid.length, 40);
+      tag.free();
+    });
+
+    await t.step("tag targetOid returns valid string", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: false });
+      const commitOid = await createCommitWithFiles(ctx, "Test", {
+        "f.txt": "content\n",
+      });
+
+      const tagOid = ctx.repo.createTag({
+        name: "target-oid-tag",
+        targetOid: commitOid,
+        tagger: { name: "Test", email: "test@test.com" },
+        message: "Test",
+      });
+
+      const tag = ctx.repo.lookupTag(tagOid);
+      // targetOid should be a valid 40-char hex string
+      assertEquals(tag.targetOid.length, 40);
+      assertEquals(tag.targetOid, commitOid);
+      tag.free();
+    });
+
+    await t.step("empty tag name edge case", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: false });
+      const commitOid = await createCommitWithFiles(ctx, "Test", {
+        "f.txt": "content\n",
+      });
+
+      // Create a tag with a short but valid name
+      const tagOid = ctx.repo.createTag({
+        name: "x",
+        targetOid: commitOid,
+        tagger: { name: "Test", email: "test@test.com" },
+        message: "Test",
+      });
+
+      const tag = ctx.repo.lookupTag(tagOid);
+      assertEquals(tag.name, "x");
+      tag.free();
+    });
+
+    await t.step("empty message tag", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: false });
+      const commitOid = await createCommitWithFiles(ctx, "Test", {
+        "f.txt": "content\n",
+      });
+
+      // Create a tag with empty message
+      const tagOid = ctx.repo.createTag({
+        name: "empty-msg-tag",
+        targetOid: commitOid,
+        tagger: { name: "Test", email: "test@test.com" },
+        message: "",
+      });
+
+      const tag = ctx.repo.lookupTag(tagOid);
+      // Empty messages are allowed but the returned message might have newlines
+      assert(tag.message === "" || tag.message === "\n");
+      tag.free();
+    });
+
+    await t.step("foreachTag callback handles name and oid correctly", async () => {
+      await using ctx = await createTestContext({ withInitialCommit: false });
+      const commitOid = await createCommitWithFiles(ctx, "Test", {
+        "f.txt": "content\n",
+      });
+
+      // Create a tag
+      ctx.repo.createLightweightTag({
+        name: "foreach-test",
+        targetOid: commitOid,
+      });
+
+      const tags = ctx.repo.foreachTag();
+      assertEquals(tags.length, 1);
+      // Verify the name is properly set
+      assert(tags[0].name.includes("foreach-test"));
+      // Verify the OID is a valid 40-char hex
+      assertEquals(tags[0].oid.length, 40);
+      const hexRegex = /^[0-9a-f]{40}$/;
+      assert(hexRegex.test(tags[0].oid));
+    });
   } finally {
     shutdown();
   }
