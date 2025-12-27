@@ -1,0 +1,10 @@
+# mise configuration for deno-libgit2
+# https://mise.jdx.dev/
+
+[tools]
+deno = "latest"
+just = "latest"
+
+[env]
+# Ensure Deno uses the correct permissions
+DENO_PERMISSIONS = "--allow-ffi --allow-read --allow-write --allow-env --allow-run"

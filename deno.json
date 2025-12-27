@@ -1,0 +1,20 @@
+{
+  "name": "@manus/libgit2",
+  "version": "0.1.0",
+  "exports": "./mod.ts",
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1.0.0"
+  },
+  "tasks": {
+    "test": "deno test --allow-ffi --allow-read --allow-write --allow-env --allow-run tests/",
+    "run-basic": "deno run --allow-ffi --allow-read --allow-write --allow-env examples/basic_usage.ts",
+    "run-inspect": "deno run --allow-ffi --allow-read --allow-env examples/inspect_repo.ts"
+  },
+  "fmt": {
+    "options": {
+      "lineWidth": 80,
+      "indentWidth": 2,
+      "singleQuote": false
+    }
+  }
+}
