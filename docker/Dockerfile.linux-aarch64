@@ -1,0 +1,37 @@
+# Dockerfile for building libgit2 for Linux aarch64
+FROM debian:bookworm-slim AS builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    pkg-config \
+    libssl-dev \
+    zlib1g-dev \
+    libpcre2-dev \
+    libssh2-1-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set libgit2 version
+ARG LIBGIT2_VERSION=1.8.4
+
+# Download and build libgit2
+WORKDIR /build
+RUN curl -L https://github.com/libgit2/libgit2/archive/refs/tags/v${LIBGIT2_VERSION}.tar.gz | tar xz \
+    && cd libgit2-${LIBGIT2_VERSION} \
+    && mkdir build && cd build \
+    && cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_SHARED_LIBS=ON \
+        -DUSE_SSH=ON \
+        -DUSE_HTTPS=OpenSSL \
+        -DBUILD_TESTS=OFF \
+        -DBUILD_CLI=OFF \
+        -DCMAKE_INSTALL_PREFIX=/usr/local \
+    && cmake --build . --parallel \
+    && cmake --install .
+
+# Copy the built library to output
+FROM scratch AS export
+COPY --from=builder /usr/local/lib/libgit2.so* /
