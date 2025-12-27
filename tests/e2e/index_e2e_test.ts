@@ -17,7 +17,7 @@ import { assertEquals, assertExists } from "@std/assert";
 Deno.test({
   name: "E2E Index Tests",
   async fn(t) {
-    setupLibrary();
+    await setupLibrary();
 
     await t.step("New repository has empty index", async () => {
       await withTestContext({}, (ctx) => {

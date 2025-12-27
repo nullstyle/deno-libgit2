@@ -16,7 +16,7 @@ import { assertEquals, assertExists } from "@std/assert";
 Deno.test({
   name: "E2E Commit Tests",
   async fn(t) {
-    setupLibrary();
+    await setupLibrary();
 
     await t.step("Create initial commit with files", async () => {
       await withTestContext({}, async (ctx) => {

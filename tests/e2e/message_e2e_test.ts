@@ -13,7 +13,7 @@ import {
 import { init, shutdown, prettifyMessage, parseTrailers } from "../../mod.ts";
 
 Deno.test("Message E2E Tests", async (t) => {
-  init();
+  await init();
 
   await t.step("prettify message - basic cleanup", async () => {
     const ctx = await createTestContext();

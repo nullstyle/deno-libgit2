@@ -13,7 +13,7 @@ import {
 import { init, shutdown } from "../../mod.ts";
 
 Deno.test("E2E Tag Tests", async (t) => {
-  init();
+  await init();
 
   try {
     await t.step("create annotated tag on commit", async () => {

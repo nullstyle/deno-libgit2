@@ -21,7 +21,7 @@ import {
 } from "./helpers.ts";
 
 Deno.test("E2E Rebase Tests", async (t) => {
-  init();
+  await init();
 
   try {
     await t.step("init rebase with two branches", async () => {

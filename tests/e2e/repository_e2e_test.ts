@@ -21,7 +21,7 @@ import { assertEquals, assertExists, assertThrows } from "@std/assert";
 Deno.test({
   name: "E2E Repository Tests",
   async fn(t) {
-    setupLibrary();
+    await setupLibrary();
 
     await t.step(
       "Repository.init creates a working git repository",

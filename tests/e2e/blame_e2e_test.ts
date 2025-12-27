@@ -21,7 +21,7 @@ import { type BlameHunk, init, Repository, shutdown } from "../../mod.ts";
 Deno.test({
   name: "E2E Blame Tests",
   async fn(t) {
-    init();
+    await init();
 
     await t.step(
       "blame file shows commit that introduced each line",

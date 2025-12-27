@@ -16,7 +16,7 @@ import {
 } from "./helpers.ts";
 
 Deno.test("E2E Cherry-pick Tests", async (t) => {
-  init();
+  await init();
 
   try {
     await t.step("cherry-pick commit to index", async () => {

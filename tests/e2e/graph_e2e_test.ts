@@ -20,7 +20,7 @@ import {
 } from "./helpers.ts";
 
 Deno.test("E2E Graph Tests", async (t) => {
-  init();
+  await init();
 
   try {
     await t.step("ahead_behind with same commit returns 0, 0", async () => {

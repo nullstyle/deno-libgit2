@@ -7,7 +7,7 @@ import { cleanupTestContext, createTestContext } from "./helpers.ts";
 import { init, shutdown } from "../../mod.ts";
 
 Deno.test("Remote E2E Tests", async (t) => {
-  init();
+  await init();
 
   await t.step("list remotes - empty repository", async () => {
     const ctx = await createTestContext({ withInitialCommit: true });

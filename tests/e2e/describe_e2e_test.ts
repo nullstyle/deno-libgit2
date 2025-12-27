@@ -22,7 +22,7 @@ import {
 } from "./helpers.ts";
 
 Deno.test("E2E Describe Tests", async (t) => {
-  init();
+  await init();
 
   try {
     await t.step("describe commit with annotated tag", async () => {

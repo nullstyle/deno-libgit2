@@ -24,8 +24,8 @@ import {
 // Test setup and teardown
 let testRepoPath: string;
 
-function setup() {
-  init();
+async function setup() {
+  await init();
   testRepoPath = Deno.makeTempDirSync({ prefix: "libgit2_file_test_" });
 }
 
@@ -107,9 +107,9 @@ function deleteFileAndCommit(
 // ============================================================
 
 Deno.test({
-  name: "Tree.lookup retrieves a tree by OID",
-  fn() {
-    setup();
+  name: "Tree: lookup tree by OID",
+  async fn() {
+    await setup();
     try {
       const repo = createTestRepo();
       createFileAndCommit(repo, "test.txt", "Hello", "Initial commit");
@@ -129,9 +129,9 @@ Deno.test({
 });
 
 Deno.test({
-  name: "Tree.getByName finds entry by name",
-  fn() {
-    setup();
+  name: "Tree: entry by name",
+  async fn() {
+    await setup();
     try {
       const repo = createTestRepo();
       createFileAndCommit(repo, "test.txt", "Hello", "Initial commit");
@@ -153,9 +153,9 @@ Deno.test({
 });
 
 Deno.test({
-  name: "Tree.getByPath finds entry in subdirectory",
-  fn() {
-    setup();
+  name: "Tree: entry by path (nested)",
+  async fn() {
+    await setup();
     try {
       const repo = createTestRepo();
       createFileAndCommit(
@@ -183,9 +183,9 @@ Deno.test({
 });
 
 Deno.test({
-  name: "Tree.hasPath returns true for existing path",
-  fn() {
-    setup();
+  name: "Tree: hasPath",
+  async fn() {
+    await setup();
     try {
       const repo = createTestRepo();
       createFileAndCommit(repo, "docs/readme.md", "# Docs", "Add docs");
@@ -205,9 +205,9 @@ Deno.test({
 });
 
 Deno.test({
-  name: "treeHasPath helper function works",
-  fn() {
-    setup();
+  name: "Tree: treeHasPath function",
+  async fn() {
+    await setup();
     try {
       const repo = createTestRepo();
       createFileAndCommit(repo, "file.txt", "content", "Add file");
@@ -229,9 +229,9 @@ Deno.test({
 // ============================================================
 
 Deno.test({
-  name: "Blob.lookup retrieves blob content",
-  fn() {
-    setup();
+  name: "Blob: lookup and content",
+  async fn() {
+    await setup();
     try {
       const repo = createTestRepo();
       const content = "Hello, World!";
@@ -258,9 +258,9 @@ Deno.test({
 });
 
 Deno.test({
-  name: "getFileContent retrieves file from tree",
-  fn() {
-    setup();
+  name: "Blob: getFileContent",
+  async fn() {
+    await setup();
     try {
       const repo = createTestRepo();
       const content = "File content here";
@@ -279,9 +279,9 @@ Deno.test({
 });
 
 Deno.test({
-  name: "fileExistsAtCommit checks file existence",
-  fn() {
-    setup();
+  name: "File History: fileExistsAtCommit",
+  async fn() {
+    await setup();
     try {
       const repo = createTestRepo();
       const oid1 = createFileAndCommit(repo, "file.txt", "v1", "Add file");
@@ -301,9 +301,9 @@ Deno.test({
 // ============================================================
 
 Deno.test({
-  name: "findFileHistory finds all commits with file",
-  fn() {
-    setup();
+  name: "File History: findFileHistory",
+  async fn() {
+    await setup();
     try {
       const repo = createTestRepo();
 
@@ -327,9 +327,9 @@ Deno.test({
 });
 
 Deno.test({
-  name: "findFileDeletion detects when file was deleted",
-  fn() {
-    setup();
+  name: "File History: findFileDeletion",
+  async fn() {
+    await setup();
     try {
       const repo = createTestRepo();
 
@@ -358,9 +358,9 @@ Deno.test({
 });
 
 Deno.test({
-  name: "findFileDeletion returns null for existing file",
-  fn() {
-    setup();
+  name: "File History: findFileDeletion returns null for existing file",
+  async fn() {
+    await setup();
     try {
       const repo = createTestRepo();
       createFileAndCommit(repo, "exists.txt", "I exist", "Add file");
@@ -377,9 +377,9 @@ Deno.test({
 });
 
 Deno.test({
-  name: "findFileCreation finds when file was first added",
-  fn() {
-    setup();
+  name: "File History: findFileCreation",
+  async fn() {
+    await setup();
     try {
       const repo = createTestRepo();
 
@@ -400,9 +400,9 @@ Deno.test({
 });
 
 Deno.test({
-  name: "fileExistsAtHead checks current file existence",
-  fn() {
-    setup();
+  name: "File History: fileExistsAtHead",
+  async fn() {
+    await setup();
     try {
       const repo = createTestRepo();
       createFileAndCommit(repo, "present.txt", "Here", "Add file");
@@ -418,9 +418,9 @@ Deno.test({
 });
 
 Deno.test({
-  name: "getFileAtHead retrieves current file content",
-  fn() {
-    setup();
+  name: "File History: getFileAtHead",
+  async fn() {
+    await setup();
     try {
       const repo = createTestRepo();
       const content = "Current content";
@@ -441,9 +441,9 @@ Deno.test({
 // ============================================================
 
 Deno.test({
-  name: "Wiki block deletion scenario",
-  fn() {
-    setup();
+  name: "Integration: Wiki block lifecycle",
+  async fn() {
+    await setup();
     try {
       const repo = createTestRepo();
 

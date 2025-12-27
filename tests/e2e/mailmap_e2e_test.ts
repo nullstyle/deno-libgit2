@@ -7,7 +7,7 @@ import { cleanupTestContext, createTestContext } from "./helpers.ts";
 import { init, Mailmap, Repository, shutdown } from "../../mod.ts";
 
 Deno.test("Mailmap E2E Tests", async (t) => {
-  init();
+  await init();
 
   await t.step("create empty mailmap", async () => {
     const ctx = await createTestContext();

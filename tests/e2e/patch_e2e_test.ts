@@ -12,7 +12,7 @@ import {
 } from "./helpers.ts";
 
 Deno.test("E2E Patch Tests", async (t) => {
-  init();
+  await init();
 
   try {
     await t.step("create patch from diff", async () => {

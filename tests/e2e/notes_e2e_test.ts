@@ -12,7 +12,7 @@ import {
 } from "./helpers.ts";
 
 Deno.test("E2E Notes Tests", async (t) => {
-  init();
+  await init();
 
   try {
     await t.step("create note on commit", async () => {

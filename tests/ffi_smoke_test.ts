@@ -1,8 +1,8 @@
 import { assert } from "@std/assert";
 import { init, Repository, shutdown, version } from "../mod.ts";
 
-Deno.test("ffi smoke: init, version, repository lifecycle", () => {
-  init();
+Deno.test("ffi smoke: init, version, repository lifecycle", async () => {
+  await init();
   try {
     const libVersion = version();
     assert(typeof libVersion.major === "number");

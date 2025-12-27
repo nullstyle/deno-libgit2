@@ -18,7 +18,7 @@ import {
 } from "./helpers.ts";
 
 Deno.test("E2E Stash Tests", async (t) => {
-  init();
+  await init();
 
   try {
     await t.step("stash save creates a stash entry", async () => {

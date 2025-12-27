@@ -86,7 +86,7 @@ async function addSubmoduleWithGit(
 }
 
 Deno.test("E2E Submodule Tests", async (t) => {
-  init();
+  await init();
 
   try {
     await t.step("list submodules in repo without submodules", async () => {

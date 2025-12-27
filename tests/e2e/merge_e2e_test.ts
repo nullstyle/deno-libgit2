@@ -19,7 +19,7 @@ import { assertEquals, assertExists } from "@std/assert";
 Deno.test({
   name: "E2E Merge Tests",
   async fn(t) {
-    setupLibrary();
+    await setupLibrary();
 
     await t.step("mergeBase finds common ancestor of two commits", async () => {
       await withTestContext({ withInitialCommit: true }, async (ctx) => {

@@ -7,7 +7,7 @@ import { cleanupTestContext, createTestContext } from "./helpers.ts";
 import { init, shutdown } from "../../mod.ts";
 
 Deno.test("E2E Ignore Tests", async (t) => {
-  init();
+  await init();
 
   await t.step("check if path is ignored with no .gitignore", async () => {
     const ctx = await createTestContext({ withInitialCommit: true });

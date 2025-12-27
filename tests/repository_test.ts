@@ -8,8 +8,8 @@ import { GitError, init, Repository, shutdown } from "../mod.ts";
 // Test setup and teardown
 let testRepoPath: string;
 
-function setup() {
-  init();
+async function setup() {
+  await init();
   // Create a temporary directory for test repository
   testRepoPath = Deno.makeTempDirSync({ prefix: "libgit2_test_" });
 }
@@ -25,8 +25,8 @@ function teardown() {
 
 Deno.test({
   name: "Repository.init creates a new repository",
-  fn() {
-    setup();
+  async fn() {
+    await setup();
     try {
       const repo = Repository.init(testRepoPath);
       assertExists(repo);
@@ -42,8 +42,8 @@ Deno.test({
 
 Deno.test({
   name: "Repository.init creates a bare repository",
-  fn() {
-    setup();
+  async fn() {
+    await setup();
     try {
       const repo = Repository.init(testRepoPath, true);
       assertExists(repo);
@@ -57,8 +57,8 @@ Deno.test({
 
 Deno.test({
   name: "Repository.open opens an existing repository",
-  fn() {
-    setup();
+  async fn() {
+    await setup();
     try {
       // First create a repository
       const repo1 = Repository.init(testRepoPath);
@@ -77,8 +77,8 @@ Deno.test({
 
 Deno.test({
   name: "Repository.open throws for non-existent path",
-  fn() {
-    setup();
+  async fn() {
+    await setup();
     try {
       assertThrows(
         () => Repository.open("/non/existent/path"),
@@ -92,8 +92,8 @@ Deno.test({
 
 Deno.test({
   name: "Repository.discover finds repository from subdirectory",
-  fn() {
-    setup();
+  async fn() {
+    await setup();
     try {
       // Create repository
       const repo = Repository.init(testRepoPath);
@@ -114,8 +114,8 @@ Deno.test({
 
 Deno.test({
   name: "Repository.path returns the .git directory path",
-  fn() {
-    setup();
+  async fn() {
+    await setup();
     try {
       const repo = Repository.init(testRepoPath);
       const path = repo.path;
@@ -130,8 +130,8 @@ Deno.test({
 
 Deno.test({
   name: "Repository.workdir returns working directory for non-bare repo",
-  fn() {
-    setup();
+  async fn() {
+    await setup();
     try {
       const repo = Repository.init(testRepoPath);
       const workdir = repo.workdir;
@@ -145,8 +145,8 @@ Deno.test({
 
 Deno.test({
   name: "Repository.workdir returns null for bare repo",
-  fn() {
-    setup();
+  async fn() {
+    await setup();
     try {
       const repo = Repository.init(testRepoPath, true);
       const workdir = repo.workdir;
@@ -160,8 +160,8 @@ Deno.test({
 
 Deno.test({
   name: "Repository.listReferences returns empty array for new repo",
-  fn() {
-    setup();
+  async fn() {
+    await setup();
     try {
       const repo = Repository.init(testRepoPath);
       const refs = repo.listReferences();
@@ -175,8 +175,8 @@ Deno.test({
 
 Deno.test({
   name: "Repository.listBranches returns empty array for new repo",
-  fn() {
-    setup();
+  async fn() {
+    await setup();
     try {
       const repo = Repository.init(testRepoPath);
       const branches = repo.listBranches();
@@ -190,8 +190,8 @@ Deno.test({
 
 Deno.test({
   name: "Repository.status returns empty array for new repo",
-  fn() {
-    setup();
+  async fn() {
+    await setup();
     try {
       const repo = Repository.init(testRepoPath);
       const status = repo.status();
@@ -205,8 +205,8 @@ Deno.test({
 
 Deno.test({
   name: "Repository.close prevents further operations",
-  fn() {
-    setup();
+  async fn() {
+    await setup();
     try {
       const repo = Repository.init(testRepoPath);
       repo.close();
@@ -220,8 +220,8 @@ Deno.test({
 
 Deno.test({
   name: "Repository.use provides automatic cleanup",
-  fn() {
-    setup();
+  async fn() {
+    await setup();
     try {
       // Create repository first
       const repo1 = Repository.init(testRepoPath);

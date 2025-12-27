@@ -7,7 +7,7 @@ import { cleanupTestContext, createTestContext } from "./helpers.ts";
 import { init, shutdown } from "../../mod.ts";
 
 Deno.test("E2E Config Tests", async (t) => {
-  init();
+  await init();
 
   await t.step("get repository config", async () => {
     const ctx = await createTestContext({ withInitialCommit: true });

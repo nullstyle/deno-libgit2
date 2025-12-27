@@ -7,7 +7,7 @@ import { cleanupTestContext, createTestContext } from "./helpers.ts";
 import { GitPathspecFlags, init, shutdown } from "../../mod.ts";
 
 Deno.test("E2E Pathspec Tests", async (t) => {
-  init();
+  await init();
 
   await t.step("create pathspec and match single path", async () => {
     const ctx = await createTestContext({ withInitialCommit: true });

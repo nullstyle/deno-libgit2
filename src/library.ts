@@ -1,12 +1,16 @@
 /**
  * @module library
  * Library loading and initialization for libgit2
+ *
+ * Uses @denosaurs/plug for cross-platform library loading with automatic
+ * caching and path resolution.
  */
 
-import { symbols, getLibrarySearchPaths } from "./ffi.ts";
+import { dlopen, type FetchOptions } from "@denosaurs/plug";
+import { symbols } from "./ffi.ts";
 import { GitError } from "./error.ts";
 import { GitErrorCode } from "./types.ts";
-import { createOutPointer, readInt32, ptrOf } from "./utils.ts";
+import { createOutPointer, ptrOf, readInt32 } from "./utils.ts";
 
 /**
  * Type for the loaded libgit2 library
@@ -24,33 +28,72 @@ let _lib: LibGit2 | null = null;
 let _initCount = 0;
 
 /**
- * Load the libgit2 library
- * @param path - Optional path to the library file
+ * Promise for library loading (to prevent concurrent loading)
  */
-export function loadLibrary(path?: string): LibGit2 {
+let _loadingPromise: Promise<LibGit2> | null = null;
+
+/**
+ * Get the default library fetch options for libgit2
+ */
+function getDefaultFetchOptions(): FetchOptions {
+  return {
+    name: "git2",
+    url: {
+      darwin: {
+        aarch64: "/opt/homebrew/lib/",
+        x86_64: "/usr/local/lib/",
+      },
+      linux: {
+        x86_64: "/usr/lib/x86_64-linux-gnu/",
+        aarch64: "/usr/lib/aarch64-linux-gnu/",
+      },
+      windows: "C:\\Program Files\\Git\\mingw64\\bin\\",
+      freebsd: "/usr/local/lib/",
+      netbsd: "/usr/pkg/lib/",
+      aix: "/opt/freeware/lib/",
+      solaris: "/usr/local/lib/",
+      illumos: "/usr/local/lib/",
+    },
+    cache: "use",
+  };
+}
+
+/**
+ * Load the libgit2 library
+ * @param options - Optional path to the library file or FetchOptions
+ */
+export function loadLibrary(
+  options?: string | FetchOptions,
+): Promise<LibGit2> {
+  // Return existing library if already loaded
   if (_lib !== null) {
-    return _lib;
+    return Promise.resolve(_lib);
   }
 
-  const searchPaths = path ? [path] : getLibrarySearchPaths();
-  let lastError: Error | null = null;
+  // Return existing loading promise if in progress
+  if (_loadingPromise !== null) {
+    return _loadingPromise;
+  }
 
-  for (const libPath of searchPaths) {
+  // Start loading
+  _loadingPromise = (async () => {
     try {
-      _lib = Deno.dlopen(libPath, symbols);
+      const fetchOptions = options ?? getDefaultFetchOptions();
+      _lib = await dlopen(fetchOptions, symbols);
       return _lib;
     } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      // Continue to next path
+      const message = error instanceof Error ? error.message : String(error);
+      throw new GitError(
+        `Failed to load libgit2 library: ${message}. ` +
+          `Please ensure libgit2 is installed on your system.`,
+        GitErrorCode.ERROR,
+      );
+    } finally {
+      _loadingPromise = null;
     }
-  }
+  })();
 
-  throw new GitError(
-    `Failed to load libgit2 library. Tried paths: ${searchPaths.join(", ")}. ` +
-    `Last error: ${lastError?.message ?? "unknown"}. ` +
-    `Please ensure libgit2 is installed on your system.`,
-    GitErrorCode.ERROR
-  );
+  return _loadingPromise;
 }
 
 /**
@@ -60,8 +103,8 @@ export function loadLibrary(path?: string): LibGit2 {
 export function getLibrary(): LibGit2 {
   if (_lib === null) {
     throw new GitError(
-      "libgit2 library not loaded. Call loadLibrary() or init() first.",
-      GitErrorCode.ERROR
+      "libgit2 library not loaded. Call init() first.",
+      GitErrorCode.ERROR,
     );
   }
   return _lib;
@@ -75,23 +118,25 @@ export function isLibraryLoaded(): boolean {
 }
 
 /**
- * Initialize the libgit2 library
+ * Initialize the libgit2 library.
  * This must be called before using any other libgit2 functions.
  * Can be called multiple times; each call must be matched with a shutdown() call.
- * @param libraryPath - Optional path to the library file
+ * @param libraryPath - Optional path to the library file or FetchOptions
  * @returns The number of initializations (including this one)
  */
-export function init(libraryPath?: string): number {
-  const lib = loadLibrary(libraryPath);
+export async function init(
+  libraryPath?: string | FetchOptions,
+): Promise<number> {
+  const lib = await loadLibrary(libraryPath);
   const result = lib.symbols.git_libgit2_init();
-  
+
   if (result < 0) {
     throw new GitError(
       `Failed to initialize libgit2: ${result}`,
-      GitErrorCode.ERROR
+      GitErrorCode.ERROR,
     );
   }
-  
+
   _initCount = result;
   return result;
 }
@@ -105,15 +150,15 @@ export function shutdown(): number {
   if (_lib === null) {
     return 0;
   }
-  
+
   const result = _lib.symbols.git_libgit2_shutdown();
   _initCount = Math.max(0, result);
-  
+
   if (_initCount === 0) {
     _lib.close();
     _lib = null;
   }
-  
+
   return result;
 }
 
@@ -123,17 +168,17 @@ export function shutdown(): number {
  */
 export function version(): { major: number; minor: number; revision: number } {
   const lib = getLibrary();
-  
+
   const majorBuf = createOutPointer();
   const minorBuf = createOutPointer();
   const revBuf = createOutPointer();
-  
+
   lib.symbols.git_libgit2_version(
     ptrOf(majorBuf),
     ptrOf(minorBuf),
-    ptrOf(revBuf)
+    ptrOf(revBuf),
   );
-  
+
   return {
     major: readInt32(majorBuf),
     minor: readInt32(minorBuf),
@@ -152,32 +197,15 @@ export function versionString(): string {
 /**
  * Run a function with automatic library initialization and shutdown
  * @param fn - The function to run
- * @param libraryPath - Optional path to the library file
+ * @param libraryPath - Optional path to the library file or FetchOptions
  */
 export async function withLibrary<T>(
   fn: () => T | Promise<T>,
-  libraryPath?: string
+  libraryPath?: string | FetchOptions,
 ): Promise<T> {
-  init(libraryPath);
+  await init(libraryPath);
   try {
     return await fn();
-  } finally {
-    shutdown();
-  }
-}
-
-/**
- * Run a synchronous function with automatic library initialization and shutdown
- * @param fn - The function to run
- * @param libraryPath - Optional path to the library file
- */
-export function withLibrarySync<T>(
-  fn: () => T,
-  libraryPath?: string
-): T {
-  init(libraryPath);
-  try {
-    return fn();
   } finally {
     shutdown();
   }

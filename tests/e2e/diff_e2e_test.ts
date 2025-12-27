@@ -13,7 +13,7 @@ import {
 } from "./helpers.ts";
 
 Deno.test("E2E Diff Tests", async (t) => {
-  init();
+  await init();
 
   try {
     await t.step("diff tree to tree", async () => {

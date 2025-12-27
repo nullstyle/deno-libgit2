@@ -251,8 +251,8 @@ export async function createCommitWithDeletions(
 /**
  * Sets up the libgit2 library for tests
  */
-export function setupLibrary(): void {
-  init();
+export async function setupLibrary(): Promise<void> {
+  await init();
 }
 
 /**

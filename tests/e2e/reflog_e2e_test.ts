@@ -21,7 +21,7 @@ import {
 } from "./helpers.ts";
 
 Deno.test("E2E Reflog Tests", async (t) => {
-  init();
+  await init();
 
   try {
     await t.step("read reflog for HEAD", async () => {

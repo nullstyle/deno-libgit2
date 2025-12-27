@@ -11,7 +11,7 @@ import {
 import { GitObjectType, init, shutdown, Tree } from "../../mod.ts";
 
 Deno.test("ODB E2E Tests", async (t) => {
-  init();
+  await init();
 
   await t.step("get odb from repository", async () => {
     const ctx = await createTestContext({ withInitialCommit: true });

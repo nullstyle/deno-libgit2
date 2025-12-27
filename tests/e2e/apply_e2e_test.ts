@@ -13,7 +13,7 @@ import {
 } from "./helpers.ts";
 
 Deno.test("E2E Apply Tests", async (t) => {
-  init();
+  await init();
 
   try {
     await t.step("apply diff to workdir", async () => {

@@ -7,7 +7,7 @@ import { cleanupTestContext, createTestContext } from "./helpers.ts";
 import { GitAttrValue, init, shutdown } from "../../mod.ts";
 
 Deno.test("E2E Attr Tests", async (t) => {
-  init();
+  await init();
 
   await t.step("get attribute for file with no attributes", async () => {
     const ctx = await createTestContext({ withInitialCommit: true });

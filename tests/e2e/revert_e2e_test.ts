@@ -12,7 +12,7 @@ import {
 } from "./helpers.ts";
 
 Deno.test("E2E Revert Tests", async (t) => {
-  init();
+  await init();
 
   try {
     await t.step("revert commit to index", async () => {

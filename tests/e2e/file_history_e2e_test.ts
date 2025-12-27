@@ -30,7 +30,7 @@ import { assertEquals, assertExists } from "@std/assert";
 Deno.test({
   name: "E2E File History Tests",
   async fn(t) {
-    setupLibrary();
+    await setupLibrary();
 
     await t.step("Tree.hasPath detects existing file", async () => {
       await withTestContext({}, async (ctx) => {

@@ -8,8 +8,8 @@
  * ```typescript
  * import { init, shutdown, Repository } from "jsr:@manus/libgit2";
  *
- * // Initialize the library
- * init();
+ * // Initialize the library (uses @denosaurs/plug for cross-platform resolution)
+ * await init();
  *
  * try {
  *   // Open a repository
@@ -44,7 +44,7 @@
  * ```typescript
  * import { init, shutdown, Repository, findFileDeletion, findFileHistory } from "jsr:@manus/libgit2";
  *
- * init();
+ * await init();
  *
  * try {
  *   using repo = Repository.open("/path/to/repo");
@@ -77,7 +77,6 @@ export {
   version,
   versionString,
   withLibrary,
-  withLibrarySync,
 } from "./src/library.ts";
 
 // Types and enums
@@ -409,4 +408,4 @@ export { Remote } from "./src/remote.ts";
 export { Odb, OdbObject, type OdbObjectHeader } from "./src/odb.ts";
 
 // FFI symbols (for advanced usage)
-export { getLibraryPath, getLibrarySearchPaths, symbols } from "./src/ffi.ts";
+export { symbols } from "./src/ffi.ts";
