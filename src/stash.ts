@@ -4,13 +4,7 @@
 
 import { getLibrary } from "./library.ts";
 import { checkError } from "./error.ts";
-import {
-  bytesToHex,
-  createOutPointer,
-  ptrOf,
-  readOidHex,
-  toCString,
-} from "./utils.ts";
+import { bytesToHex, ptrOf, toCString } from "./utils.ts";
 import { Signature } from "./signature.ts";
 
 /**
@@ -121,7 +115,7 @@ export function stashSave(
 export function stashApply(
   repoPtr: Deno.PointerValue,
   index: number,
-  options?: StashApplyOptions,
+  _options?: StashApplyOptions,
 ): void {
   const lib = getLibrary();
 
@@ -140,7 +134,7 @@ export function stashApply(
 export function stashPop(
   repoPtr: Deno.PointerValue,
   index: number,
-  options?: StashApplyOptions,
+  _options?: StashApplyOptions,
 ): void {
   const lib = getLibrary();
 

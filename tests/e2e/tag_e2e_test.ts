@@ -2,20 +2,15 @@
  * End-to-end tests for tag operations
  */
 
-import {
-  assertEquals,
-  assertExists,
-  assertNotEquals,
-  assert,
-} from "@std/assert";
+import { assert, assertEquals, assertExists } from "@std/assert";
 
 import {
-  createTestContext,
   cleanupTestContext,
   createCommitWithFiles,
+  createTestContext,
 } from "./helpers.ts";
 
-import { init, shutdown, Repository } from "../../mod.ts";
+import { init, shutdown } from "../../mod.ts";
 
 Deno.test("E2E Tag Tests", async (t) => {
   init();

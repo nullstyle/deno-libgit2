@@ -9,17 +9,12 @@
  */
 
 import {
+  createCommitWithFiles,
   setupLibrary,
   teardownLibrary,
   withTestContext,
-  createCommitWithFiles,
-  createFile,
 } from "./helpers.ts";
-import {
-  assertEquals,
-  assertExists,
-  assertNotEquals,
-} from "@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 
 Deno.test({
   name: "E2E Merge Tests",
@@ -43,7 +38,11 @@ Deno.test({
 
         // The merge base should be the base commit
         const mergeBase = ctx.repo.mergeBase(mainCommit, baseCommit);
-        assertEquals(mergeBase, baseCommit, "Merge base should be the common ancestor");
+        assertEquals(
+          mergeBase,
+          baseCommit,
+          "Merge base should be the common ancestor",
+        );
       });
     });
 
@@ -71,7 +70,7 @@ Deno.test({
     await t.step("mergeAnalysis detects up-to-date status", async () => {
       await withTestContext({ withInitialCommit: true }, async (ctx) => {
         // Create a commit
-        const commit = await createCommitWithFiles(ctx, "Some commit", {
+        const _commit = await createCommitWithFiles(ctx, "Some commit", {
           "file.txt": "content",
         });
 
@@ -118,9 +117,13 @@ Deno.test({
 
         // Checkout feature (simulated - we stay on main)
         // Add a commit that we'll merge back
-        const featureCommit = await createCommitWithFiles(ctx, "Feature commit", {
-          "feature.txt": "feature content",
-        });
+        const _featureCommit = await createCommitWithFiles(
+          ctx,
+          "Feature commit",
+          {
+            "feature.txt": "feature content",
+          },
+        );
 
         // Save the feature commit OID
         const featureOid = ctx.repo.headOid();
@@ -187,7 +190,7 @@ Deno.test({
     await t.step("mergeCommits detects conflicts", async () => {
       await withTestContext({ withInitialCommit: true }, async (ctx) => {
         // Create base commit with a file
-        const baseCommit = await createCommitWithFiles(ctx, "Base", {
+        const _baseCommit = await createCommitWithFiles(ctx, "Base", {
           "conflict.txt": "original content",
         });
 
@@ -225,7 +228,9 @@ Deno.test({
         ctx.repo.createBranch("to-merge", baseCommit);
 
         // Get annotated commit from branch reference
-        const annotatedCommit = ctx.repo.annotatedCommitFromRef("refs/heads/to-merge");
+        const annotatedCommit = ctx.repo.annotatedCommitFromRef(
+          "refs/heads/to-merge",
+        );
         assertExists(annotatedCommit);
         assertEquals(annotatedCommit.id.length, 40);
 

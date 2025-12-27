@@ -3,13 +3,12 @@
  * Tests use real file operations in temporary directories
  */
 
-import { assertEquals, assertExists, assertGreater } from "@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { init, Repository, shutdown } from "../../mod.ts";
 import {
   cleanupTestContext,
   createCommitWithFiles,
   createTestContext,
-  type TestContext,
 } from "./helpers.ts";
 
 const decoder = new TextDecoder();

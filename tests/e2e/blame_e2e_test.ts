@@ -11,58 +11,55 @@ import {
 } from "@std/assert";
 
 import {
-  createTestContext,
   cleanupTestContext,
   createCommitWithFiles,
-  type TestContext,
+  createTestContext,
 } from "./helpers.ts";
 
-import {
-  init,
-  shutdown,
-  Repository,
-  Blame,
-  GitBlameFlags,
-  type BlameHunk,
-  type BlameOptions,
-} from "../../mod.ts";
+import { type BlameHunk, init, Repository, shutdown } from "../../mod.ts";
 
 Deno.test({
   name: "E2E Blame Tests",
   async fn(t) {
     init();
 
-    await t.step("blame file shows commit that introduced each line", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
-        // Create a file with multiple lines
-        await createCommitWithFiles(ctx, "Add file with content", {
-          "test.txt": "line 1\nline 2\nline 3\n",
-        });
-
-        const repo = Repository.open(ctx.repoPath);
+    await t.step(
+      "blame file shows commit that introduced each line",
+      async () => {
+        const ctx = await createTestContext({ withInitialCommit: true });
         try {
-          const blame = repo.blameFile("test.txt");
-          try {
-            // Should have hunks
-            const hunkCount = blame.hunkCount;
-            assertGreater(hunkCount, 0, "Should have at least one hunk");
+          // Create a file with multiple lines
+          await createCommitWithFiles(ctx, "Add file with content", {
+            "test.txt": "line 1\nline 2\nline 3\n",
+          });
 
-            // Get the first hunk
-            const hunk = blame.getHunkByIndex(0);
-            assertExists(hunk, "Should have hunk at index 0");
-            assertExists(hunk.finalCommitId, "Hunk should have final commit ID");
-            assertGreater(hunk.linesInHunk, 0, "Hunk should have lines");
+          const repo = Repository.open(ctx.repoPath);
+          try {
+            const blame = repo.blameFile("test.txt");
+            try {
+              // Should have hunks
+              const hunkCount = blame.hunkCount;
+              assertGreater(hunkCount, 0, "Should have at least one hunk");
+
+              // Get the first hunk
+              const hunk = blame.getHunkByIndex(0);
+              assertExists(hunk, "Should have hunk at index 0");
+              assertExists(
+                hunk.finalCommitId,
+                "Hunk should have final commit ID",
+              );
+              assertGreater(hunk.linesInHunk, 0, "Hunk should have lines");
+            } finally {
+              blame.free();
+            }
           } finally {
-            blame.free();
+            repo.close();
           }
         } finally {
-          repo.close();
+          await cleanupTestContext(ctx);
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
-    });
+      },
+    );
 
     await t.step("blame tracks changes across multiple commits", async () => {
       const ctx = await createTestContext({ withInitialCommit: true });
@@ -99,34 +96,37 @@ Deno.test({
       }
     });
 
-    await t.step("blame getHunkByLine returns correct hunk for line number", async () => {
-      const ctx = await createTestContext({ withInitialCommit: true });
-      try {
-        await createCommitWithFiles(ctx, "Add file", {
-          "test.txt": "line 1\nline 2\nline 3\n",
-        });
-
-        const repo = Repository.open(ctx.repoPath);
+    await t.step(
+      "blame getHunkByLine returns correct hunk for line number",
+      async () => {
+        const ctx = await createTestContext({ withInitialCommit: true });
         try {
-          const blame = repo.blameFile("test.txt");
-          try {
-            // Get hunk for line 1 (1-based)
-            const hunk1 = blame.getHunkByLine(1);
-            assertExists(hunk1, "Should have hunk for line 1");
+          await createCommitWithFiles(ctx, "Add file", {
+            "test.txt": "line 1\nline 2\nline 3\n",
+          });
 
-            // Get hunk for line 2
-            const hunk2 = blame.getHunkByLine(2);
-            assertExists(hunk2, "Should have hunk for line 2");
+          const repo = Repository.open(ctx.repoPath);
+          try {
+            const blame = repo.blameFile("test.txt");
+            try {
+              // Get hunk for line 1 (1-based)
+              const hunk1 = blame.getHunkByLine(1);
+              assertExists(hunk1, "Should have hunk for line 1");
+
+              // Get hunk for line 2
+              const hunk2 = blame.getHunkByLine(2);
+              assertExists(hunk2, "Should have hunk for line 2");
+            } finally {
+              blame.free();
+            }
           } finally {
-            blame.free();
+            repo.close();
           }
         } finally {
-          repo.close();
+          await cleanupTestContext(ctx);
         }
-      } finally {
-        await cleanupTestContext(ctx);
-      }
-    });
+      },
+    );
 
     await t.step("blame hunk contains author information", async () => {
       const ctx = await createTestContext({ withInitialCommit: true });
@@ -168,7 +168,11 @@ Deno.test({
           try {
             const hunk = blame.getHunkByIndex(0);
             assertExists(hunk, "Should have hunk");
-            assertGreater(hunk.finalStartLineNumber, 0, "Should have start line number");
+            assertGreater(
+              hunk.finalStartLineNumber,
+              0,
+              "Should have start line number",
+            );
             assertGreater(hunk.linesInHunk, 0, "Should have lines count");
           } finally {
             blame.free();
@@ -260,9 +264,12 @@ Deno.test({
 
     // Note: This test is skipped because git mv + libgit2 blame interaction
     // requires the repository to be properly synced which is complex in tests
-    await t.step("blame shows original path for renamed files (skipped)", async () => {
-      // Test skipped - rename tracking requires complex test setup
-    });
+    await t.step(
+      "blame shows original path for renamed files (skipped)",
+      async () => {
+        // Test skipped - rename tracking requires complex test setup
+      },
+    );
 
     await t.step("blame hunk has commit summary", async () => {
       const ctx = await createTestContext({ withInitialCommit: true });

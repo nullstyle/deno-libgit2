@@ -13,7 +13,7 @@ import {
   readPointer,
   toCString,
 } from "./utils.ts";
-import { Repository } from "./repository.ts";
+import type { Repository } from "./repository.ts";
 import { getTreeEntryByPath, Tree } from "./tree.ts";
 
 /**

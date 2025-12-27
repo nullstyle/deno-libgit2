@@ -3,7 +3,7 @@
  * Functions for tracking file history and finding deleted files
  */
 
-import { Repository } from "./repository.ts";
+import type { Repository } from "./repository.ts";
 import { Tree, treeHasPath } from "./tree.ts";
 import { getFileContent, getFileRawContent } from "./blob.ts";
 import type { CommitInfo } from "./types.ts";

@@ -3,9 +3,9 @@
  * Git commit operations
  */
 
-import { getLibrary, type LibGit2 } from "./library.ts";
-import { checkError, GitError } from "./error.ts";
-import { GitErrorCode, type GitSignature, type Pointer } from "./types.ts";
+import { getLibrary } from "./library.ts";
+import { checkError } from "./error.ts";
+import type { GitSignature, Pointer } from "./types.ts";
 import {
   createOutPointer,
   createPointerArray,
@@ -18,7 +18,7 @@ import {
   toCString,
   writePointerArrayValue,
 } from "./utils.ts";
-import { Repository } from "./repository.ts";
+import type { Repository } from "./repository.ts";
 import { Index } from "./index.ts";
 
 /**
@@ -262,7 +262,6 @@ export function amendCommit(
   repo: Repository,
   options: Partial<CreateCommitOptions>,
 ): string {
-  const lib = getLibrary();
   const defer = new Defer();
 
   try {

@@ -3,7 +3,7 @@
  * Git graph traversal operations for libgit2
  */
 
-import { getLibrary, type LibGit2 } from "./library.ts";
+import type { LibGit2 } from "./library.ts";
 import { checkError } from "./error.ts";
 import type { Pointer } from "./types.ts";
 import {

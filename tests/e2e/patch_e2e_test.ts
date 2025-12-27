@@ -3,20 +3,12 @@
  * Tests use real file operations in temporary directories
  */
 
+import { assert, assertEquals, assertExists } from "@std/assert";
+import { init, shutdown } from "../../mod.ts";
 import {
-  assert,
-  assertEquals,
-  assertExists,
-} from "@std/assert";
-import {
-  init,
-  shutdown,
-  Repository,
-} from "../../mod.ts";
-import {
-  createTestContext,
   cleanupTestContext,
   createCommitWithFiles,
+  createTestContext,
 } from "./helpers.ts";
 
 Deno.test("E2E Patch Tests", async (t) => {
@@ -27,7 +19,9 @@ Deno.test("E2E Patch Tests", async (t) => {
       const ctx = await createTestContext({ withInitialCommit: true });
       try {
         // Create first commit
-        await createCommitWithFiles(ctx, "Initial", { "file.txt": "initial\n" });
+        await createCommitWithFiles(ctx, "Initial", {
+          "file.txt": "initial\n",
+        });
         const firstOid = ctx.repo.headOid();
 
         // Create second commit with changes
@@ -61,7 +55,9 @@ Deno.test("E2E Patch Tests", async (t) => {
       const ctx = await createTestContext({ withInitialCommit: true });
       try {
         // Create first commit
-        await createCommitWithFiles(ctx, "Initial", { "file.txt": "line1\nline2\nline3\n" });
+        await createCommitWithFiles(ctx, "Initial", {
+          "file.txt": "line1\nline2\nline3\n",
+        });
         const firstOid = ctx.repo.headOid();
 
         // Create second commit with changes
@@ -90,7 +86,9 @@ Deno.test("E2E Patch Tests", async (t) => {
       const ctx = await createTestContext({ withInitialCommit: true });
       try {
         // Create first commit
-        await createCommitWithFiles(ctx, "Initial", { "file.txt": "initial\n" });
+        await createCommitWithFiles(ctx, "Initial", {
+          "file.txt": "initial\n",
+        });
         const firstOid = ctx.repo.headOid();
 
         // Create second commit with changes
@@ -121,7 +119,9 @@ Deno.test("E2E Patch Tests", async (t) => {
       const ctx = await createTestContext({ withInitialCommit: true });
       try {
         // Create first commit
-        await createCommitWithFiles(ctx, "Initial", { "file.txt": "initial\n" });
+        await createCommitWithFiles(ctx, "Initial", {
+          "file.txt": "initial\n",
+        });
         const firstOid = ctx.repo.headOid();
 
         // Create second commit with new file
@@ -142,7 +142,10 @@ Deno.test("E2E Patch Tests", async (t) => {
         // Get patch as string
         const patchStr = patch.toString();
         assert(patchStr.includes("new.txt"), "Patch should mention new.txt");
-        assert(patchStr.includes("+new content"), "Patch should show added content");
+        assert(
+          patchStr.includes("+new content"),
+          "Patch should show added content",
+        );
 
         patch.free();
         diff.free();
@@ -155,7 +158,9 @@ Deno.test("E2E Patch Tests", async (t) => {
       const ctx = await createTestContext({ withInitialCommit: true });
       try {
         // Create first commit
-        await createCommitWithFiles(ctx, "Initial", { "file.txt": "line1\nline2\nline3\n" });
+        await createCommitWithFiles(ctx, "Initial", {
+          "file.txt": "line1\nline2\nline3\n",
+        });
         const firstOid = ctx.repo.headOid();
 
         // Create second commit with changes

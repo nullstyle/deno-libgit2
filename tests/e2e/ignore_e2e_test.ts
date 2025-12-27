@@ -2,16 +2,9 @@
  * End-to-end tests for ignore operations
  */
 
-import {
-  assertEquals,
-  assertExists,
-} from "@std/assert";
-import {
-  createTestContext,
-  cleanupTestContext,
-  type TestContext,
-} from "./helpers.ts";
-import { init, shutdown, Repository } from "../../mod.ts";
+import { assertEquals } from "@std/assert";
+import { cleanupTestContext, createTestContext } from "./helpers.ts";
+import { init, shutdown } from "../../mod.ts";
 
 Deno.test("E2E Ignore Tests", async (t) => {
   init();
@@ -131,7 +124,7 @@ Deno.test("E2E Ignore Tests", async (t) => {
       // Create .gitignore with negation
       await Deno.writeTextFile(
         `${ctx.repoPath}/.gitignore`,
-        "*.log\n!important.log\n"
+        "*.log\n!important.log\n",
       );
 
       // Check ignores
@@ -150,14 +143,17 @@ Deno.test("E2E Ignore Tests", async (t) => {
       await Deno.mkdir(`${ctx.repoPath}/lib/node_modules`, { recursive: true });
       await Deno.writeTextFile(
         `${ctx.repoPath}/src/node_modules/package.json`,
-        "{}"
+        "{}",
       );
 
       // Add rule to ignore node_modules anywhere
       ctx.repo.addIgnoreRule("**/node_modules/\n");
 
       // Check ignores
-      assertEquals(ctx.repo.pathIsIgnored("src/node_modules/package.json"), true);
+      assertEquals(
+        ctx.repo.pathIsIgnored("src/node_modules/package.json"),
+        true,
+      );
       assertEquals(ctx.repo.pathIsIgnored("lib/node_modules/"), true);
     } finally {
       await cleanupTestContext(ctx);
@@ -179,7 +175,10 @@ Deno.test("E2E Ignore Tests", async (t) => {
     const ctx = await createTestContext({ withInitialCommit: true });
     try {
       // Create file with spaces
-      await Deno.writeTextFile(`${ctx.repoPath}/file with spaces.txt`, "content");
+      await Deno.writeTextFile(
+        `${ctx.repoPath}/file with spaces.txt`,
+        "content",
+      );
 
       // Add ignore rule (escape with backslash or quotes)
       ctx.repo.addIgnoreRule("file\\ with\\ spaces.txt\n");

@@ -3,20 +3,12 @@
  * Tests use real file operations in temporary directories
  */
 
+import { assert, assertEquals, assertExists } from "@std/assert";
+import { init, shutdown } from "../../mod.ts";
 import {
-  assert,
-  assertEquals,
-  assertExists,
-} from "@std/assert";
-import {
-  init,
-  shutdown,
-  Repository,
-} from "../../mod.ts";
-import {
-  createTestContext,
   cleanupTestContext,
   createCommitWithFiles,
+  createTestContext,
 } from "./helpers.ts";
 
 Deno.test("E2E Revert Tests", async (t) => {
@@ -27,8 +19,10 @@ Deno.test("E2E Revert Tests", async (t) => {
       const ctx = await createTestContext({ withInitialCommit: true });
       try {
         // Create initial commit
-        await createCommitWithFiles(ctx, "Initial", { "file.txt": "initial\n" });
-        const baseOid = ctx.repo.headOid();
+        await createCommitWithFiles(ctx, "Initial", {
+          "file.txt": "initial\n",
+        });
+        const _baseOid = ctx.repo.headOid();
 
         // Add a commit that we'll revert
         await createCommitWithFiles(ctx, "Add feature", {
@@ -54,7 +48,9 @@ Deno.test("E2E Revert Tests", async (t) => {
       const ctx = await createTestContext({ withInitialCommit: true });
       try {
         // Create initial commit
-        await createCommitWithFiles(ctx, "Initial", { "file.txt": "initial\n" });
+        await createCommitWithFiles(ctx, "Initial", {
+          "file.txt": "initial\n",
+        });
 
         // Add a commit that we'll revert
         await createCommitWithFiles(ctx, "Add feature", {
@@ -64,14 +60,18 @@ Deno.test("E2E Revert Tests", async (t) => {
 
         // Verify file exists before revert
         const filePath = `${ctx.repoPath}/feature.txt`;
-        let fileExists = await Deno.stat(filePath).then(() => true).catch(() => false);
+        let fileExists = await Deno.stat(filePath).then(() => true).catch(() =>
+          false
+        );
         assert(fileExists, "Feature file should exist before revert");
 
         // Revert the feature commit (modifies working directory)
         ctx.repo.revert(featureOid);
 
         // Verify the file is removed in working directory
-        fileExists = await Deno.stat(filePath).then(() => true).catch(() => false);
+        fileExists = await Deno.stat(filePath).then(() => true).catch(() =>
+          false
+        );
         assert(!fileExists, "Feature file should be removed after revert");
       } finally {
         await cleanupTestContext(ctx);
@@ -82,7 +82,9 @@ Deno.test("E2E Revert Tests", async (t) => {
       const ctx = await createTestContext({ withInitialCommit: true });
       try {
         // Create initial commit with a file
-        await createCommitWithFiles(ctx, "Initial", { "file.txt": "original content\n" });
+        await createCommitWithFiles(ctx, "Initial", {
+          "file.txt": "original content\n",
+        });
 
         // Modify the file
         await createCommitWithFiles(ctx, "Modify file", {
@@ -109,7 +111,9 @@ Deno.test("E2E Revert Tests", async (t) => {
       const ctx = await createTestContext({ withInitialCommit: true });
       try {
         // Create initial commit
-        await createCommitWithFiles(ctx, "Initial", { "file.txt": "initial\n" });
+        await createCommitWithFiles(ctx, "Initial", {
+          "file.txt": "initial\n",
+        });
 
         // Add a commit that modifies the file
         await createCommitWithFiles(ctx, "First change", {
@@ -140,7 +144,9 @@ Deno.test("E2E Revert Tests", async (t) => {
     await t.step("revert non-existent commit throws error", async () => {
       const ctx = await createTestContext({ withInitialCommit: true });
       try {
-        await createCommitWithFiles(ctx, "Initial", { "file.txt": "initial\n" });
+        await createCommitWithFiles(ctx, "Initial", {
+          "file.txt": "initial\n",
+        });
         const baseOid = ctx.repo.headOid();
 
         const fakeOid = "0000000000000000000000000000000000000000";
@@ -161,7 +167,9 @@ Deno.test("E2E Revert Tests", async (t) => {
       const ctx = await createTestContext({ withInitialCommit: true });
       try {
         // Create initial commit
-        await createCommitWithFiles(ctx, "Initial", { "file.txt": "initial\n" });
+        await createCommitWithFiles(ctx, "Initial", {
+          "file.txt": "initial\n",
+        });
 
         // Add a feature
         await createCommitWithFiles(ctx, "Add feature", {
@@ -175,8 +183,13 @@ Deno.test("E2E Revert Tests", async (t) => {
 
         // Working directory should still have the file
         const filePath = `${ctx.repoPath}/feature.txt`;
-        const fileExists = await Deno.stat(filePath).then(() => true).catch(() => false);
-        assert(fileExists, "File should still exist in working directory after revertCommit");
+        const fileExists = await Deno.stat(filePath).then(() => true).catch(
+          () => false
+        );
+        assert(
+          fileExists,
+          "File should still exist in working directory after revertCommit",
+        );
 
         index.free();
       } finally {

@@ -9,7 +9,7 @@ import {
   type AnnotatedCommitInfo,
   type ConflictEntry,
   GitMergeAnalysis,
-  GitMergePreference,
+  type GitMergePreference,
   type MergeAnalysisResult,
   type MergeOptions,
   type Pointer,

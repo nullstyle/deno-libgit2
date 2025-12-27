@@ -3,14 +3,10 @@
  * Git revert operations for libgit2
  */
 
-import { getLibrary, type LibGit2 } from "./library.ts";
+import type { LibGit2 } from "./library.ts";
 import { checkError } from "./error.ts";
 import type { Pointer } from "./types.ts";
-import {
-  createOutPointer,
-  readPointer,
-  ptrOf,
-} from "./utils.ts";
+import { createOutPointer, ptrOf, readPointer } from "./utils.ts";
 import { Index } from "./index.ts";
 
 /**
@@ -23,7 +19,7 @@ export interface RevertOptions {
 
 /**
  * Revert a commit against another commit, producing an index
- * 
+ *
  * @param lib - LibGit2 library instance
  * @param repoPtr - Repository pointer
  * @param revertCommitPtr - Commit to revert
@@ -36,7 +32,7 @@ export function revertCommit(
   repoPtr: Pointer,
   revertCommitPtr: Pointer,
   ourCommitPtr: Pointer,
-  mainline: number = 0
+  mainline: number = 0,
 ): Index {
   const outPtr = createOutPointer();
 
@@ -46,7 +42,7 @@ export function revertCommit(
     revertCommitPtr,
     ourCommitPtr,
     mainline,
-    null // merge_options (use defaults)
+    null, // merge_options (use defaults)
   );
 
   checkError(lib, result, "Failed to revert commit");
@@ -56,7 +52,7 @@ export function revertCommit(
 
 /**
  * Revert a commit, modifying the index and working directory
- * 
+ *
  * @param lib - LibGit2 library instance
  * @param repoPtr - Repository pointer
  * @param commitPtr - Commit to revert
@@ -64,12 +60,12 @@ export function revertCommit(
 export function revert(
   lib: LibGit2,
   repoPtr: Pointer,
-  commitPtr: Pointer
+  commitPtr: Pointer,
 ): void {
   const result = lib.symbols.git_revert(
     repoPtr,
     commitPtr,
-    null // revert_options (use defaults)
+    null, // revert_options (use defaults)
   );
 
   checkError(lib, result, "Failed to revert");

@@ -6,10 +6,10 @@
  */
 
 import {
+  createCommitWithFiles,
   setupLibrary,
   teardownLibrary,
   withTestContext,
-  createCommitWithFiles,
 } from "./helpers.ts";
 import { assertEquals, assertExists } from "@std/assert";
 
@@ -27,7 +27,11 @@ Deno.test({
         });
 
         assertExists(commitOid);
-        assertEquals(commitOid.length, 40, "Commit OID should be 40 characters");
+        assertEquals(
+          commitOid.length,
+          40,
+          "Commit OID should be 40 characters",
+        );
 
         // Verify repository is no longer empty
         assertEquals(ctx.repo.isEmpty, false);
@@ -63,7 +67,8 @@ Deno.test({
 
     await t.step("Commit messages are preserved correctly", async () => {
       await withTestContext({}, async (ctx) => {
-        const message = "This is a detailed commit message\n\nWith a body that spans\nmultiple lines.";
+        const message =
+          "This is a detailed commit message\n\nWith a body that spans\nmultiple lines.";
 
         await createCommitWithFiles(ctx, message, {
           "test.txt": "test content",
@@ -84,7 +89,7 @@ Deno.test({
           "Test commit",
           { "test.txt": "content" },
           "John Doe",
-          "john@example.com"
+          "john@example.com",
         );
 
         const commits = Array.from(ctx.repo.walkCommits());
@@ -111,8 +116,16 @@ Deno.test({
         assertExists(commitTime);
 
         // Commit time should be between before and after (with some tolerance)
-        assertEquals(commitTime >= beforeCommit - 1000, true, "Commit time should be after test start");
-        assertEquals(commitTime <= afterCommit + 1000, true, "Commit time should be before test end");
+        assertEquals(
+          commitTime >= beforeCommit - 1000,
+          true,
+          "Commit time should be after test start",
+        );
+        assertEquals(
+          commitTime <= afterCommit + 1000,
+          true,
+          "Commit time should be before test end",
+        );
       });
     });
 
@@ -156,7 +169,11 @@ Deno.test({
         // Walk with limit of 3
         const commits = Array.from(ctx.repo.walkCommits(undefined, 3));
         assertEquals(commits.length, 3, "Should only return 3 commits");
-        assertEquals(commits[0].message.includes("Commit 5"), true, "First should be most recent");
+        assertEquals(
+          commits[0].message.includes("Commit 5"),
+          true,
+          "First should be most recent",
+        );
       });
     });
 
@@ -182,37 +199,44 @@ Deno.test({
       });
     });
 
-    await t.step("Modifying file creates new commit with correct parent", async () => {
-      await withTestContext({}, async (ctx) => {
-        // Create initial commit
-        const commit1 = await createCommitWithFiles(ctx, "Initial", {
-          "file.txt": "version 1",
+    await t.step(
+      "Modifying file creates new commit with correct parent",
+      async () => {
+        await withTestContext({}, async (ctx) => {
+          // Create initial commit
+          const commit1 = await createCommitWithFiles(ctx, "Initial", {
+            "file.txt": "version 1",
+          });
+
+          // Modify file and create new commit
+          const commit2 = await createCommitWithFiles(ctx, "Modified", {
+            "file.txt": "version 2",
+          });
+
+          // Verify parent relationship
+          const commits = Array.from(ctx.repo.walkCommits());
+          assertEquals(commits.length, 2);
+          assertEquals(commits[0].oid, commit2);
+          assertEquals(commits[1].oid, commit1);
+
+          // The second commit should have the first as parent
+          assertEquals(commits[0].parents.length, 1);
+          assertEquals(commits[0].parents[0], commit1);
         });
-
-        // Modify file and create new commit
-        const commit2 = await createCommitWithFiles(ctx, "Modified", {
-          "file.txt": "version 2",
-        });
-
-        // Verify parent relationship
-        const commits = Array.from(ctx.repo.walkCommits());
-        assertEquals(commits.length, 2);
-        assertEquals(commits[0].oid, commit2);
-        assertEquals(commits[1].oid, commit1);
-
-        // The second commit should have the first as parent
-        assertEquals(commits[0].parents.length, 1);
-        assertEquals(commits[0].parents[0], commit1);
-      });
-    });
+      },
+    );
 
     await t.step("Empty repository has no commits to walk", async () => {
-      await withTestContext({}, async (ctx) => {
+      await withTestContext({}, (ctx) => {
         // Empty repository has no HEAD, so walkCommits should throw or return empty
         // We catch the error since there's no HEAD to walk from
         try {
           const commits = Array.from(ctx.repo.walkCommits());
-          assertEquals(commits.length, 0, "Empty repository should have no commits");
+          assertEquals(
+            commits.length,
+            0,
+            "Empty repository should have no commits",
+          );
         } catch (e) {
           // Expected - no HEAD reference exists in empty repo
           assertEquals((e as Error).message.includes("not found"), true);

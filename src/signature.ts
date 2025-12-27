@@ -83,7 +83,7 @@ export class Signature {
   /**
    * Create a new signature with specific time
    */
-  static new(
+  static create(
     name: string,
     email: string,
     time: number,
@@ -112,7 +112,13 @@ export class Signature {
    */
   static fromInfo(info: SignatureInfo, lib?: LibGit2): Signature {
     if (info.time !== undefined && info.offset !== undefined) {
-      return Signature.new(info.name, info.email, info.time, info.offset, lib);
+      return Signature.create(
+        info.name,
+        info.email,
+        info.time,
+        info.offset,
+        lib,
+      );
     }
     return Signature.now(info.name, info.email, lib);
   }

@@ -8,7 +8,6 @@ import { checkError, GitError } from "./error.ts";
 import { GitErrorCode, type Pointer } from "./types.ts";
 import {
   createOutPointer,
-  Defer,
   fromCString,
   ptrOf,
   readOidHex,
@@ -16,7 +15,7 @@ import {
   readPointerValueFromPtrView,
   toCString,
 } from "./utils.ts";
-import { Repository } from "./repository.ts";
+import type { Repository } from "./repository.ts";
 
 const INDEX_ENTRY_MODE_OFFSET = 24;
 const INDEX_ENTRY_FILE_SIZE_OFFSET = 36;

@@ -2,18 +2,8 @@
  * Tests for Repository operations
  */
 
-import {
-  assertEquals,
-  assertExists,
-  assertThrows,
-} from "@std/assert";
-import {
-  init,
-  shutdown,
-  Repository,
-  GitError,
-  GitBranchType,
-} from "../mod.ts";
+import { assertEquals, assertExists, assertThrows } from "@std/assert";
+import { GitError, init, Repository, shutdown } from "../mod.ts";
 
 // Test setup and teardown
 let testRepoPath: string;
@@ -92,7 +82,7 @@ Deno.test({
     try {
       assertThrows(
         () => Repository.open("/non/existent/path"),
-        GitError
+        GitError,
       );
     } finally {
       teardown();

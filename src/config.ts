@@ -14,7 +14,7 @@ import {
   readPointerValueFromPtrView,
   toCString,
 } from "./utils.ts";
-import { Pointer } from "./types.ts";
+import type { Pointer } from "./types.ts";
 
 /** Config priority levels */
 export enum GitConfigLevel {

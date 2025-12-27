@@ -146,7 +146,7 @@ export function checkError(
  * @param fn - The function to execute
  */
 export function wrapError<T>(
-  lib: { symbols: { git_error_last: () => Pointer } },
+  _lib: { symbols: { git_error_last: () => Pointer } },
   operation: string,
   fn: () => T,
 ): T {

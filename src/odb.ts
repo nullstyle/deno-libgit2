@@ -14,9 +14,8 @@ import {
   readOidHex,
   readPointer,
   readPointerArrayValue,
-  toCString,
 } from "./utils.ts";
-import { GitObjectType, type Pointer } from "./types.ts";
+import type { GitObjectType, Pointer } from "./types.ts";
 
 /**
  * Object header information

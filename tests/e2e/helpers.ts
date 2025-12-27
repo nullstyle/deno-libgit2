@@ -5,7 +5,7 @@
  * and performing real file operations for integration testing.
  */
 
-import { init, shutdown, Repository, Index, createCommit } from "../../mod.ts";
+import { createCommit, Index, init, Repository, shutdown } from "../../mod.ts";
 
 /** Test context containing a temporary directory and initialized repository */
 export interface TestContext {
@@ -52,7 +52,7 @@ export async function removeTempDir(path: string): Promise<void> {
 export async function createFile(
   dir: string,
   relativePath: string,
-  content: string
+  content: string,
 ): Promise<string> {
   const fullPath = `${dir}/${relativePath}`;
   const parentDir = fullPath.substring(0, fullPath.lastIndexOf("/"));
@@ -94,7 +94,7 @@ export async function deleteFile(path: string): Promise<void> {
  * Creates a test context with a temporary directory and initialized repository
  */
 export async function createTestContext(
-  options: TestContextOptions = {}
+  options: TestContextOptions = {},
 ): Promise<TestContext> {
   const { bare = false, withInitialCommit = false } = options;
 
@@ -106,7 +106,11 @@ export async function createTestContext(
 
   if (withInitialCommit && !bare) {
     // Create an initial commit with a README
-    await createFile(repoPath, "README.md", "# Test Repository\n\nThis is a test repository.\n");
+    await createFile(
+      repoPath,
+      "README.md",
+      "# Test Repository\n\nThis is a test repository.\n",
+    );
 
     const index = Index.fromRepository(repo);
     index.add("README.md");
@@ -142,7 +146,7 @@ export async function cleanupTestContext(ctx: TestContext): Promise<void> {
  */
 export async function withTestContext(
   options: TestContextOptions,
-  fn: (ctx: TestContext) => Promise<void>
+  fn: (ctx: TestContext) => Promise<void> | void,
 ): Promise<void> {
   const ctx = await createTestContext(options);
   try {
@@ -160,7 +164,7 @@ export async function createCommitWithFiles(
   message: string,
   files: Record<string, string>,
   author = "Test Author",
-  email = "test@example.com"
+  email = "test@example.com",
 ): Promise<string> {
   // Write files to disk
   for (const [path, content] of Object.entries(files)) {
@@ -206,7 +210,7 @@ export async function createCommitWithDeletions(
   message: string,
   filesToDelete: string[],
   author = "Test Author",
-  email = "test@example.com"
+  email = "test@example.com",
 ): Promise<string> {
   // Delete files from disk
   for (const path of filesToDelete) {

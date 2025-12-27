@@ -18,8 +18,8 @@ import {
   readStrarray,
   toCString,
 } from "./utils.ts";
-import { Signature, SignatureInfo } from "./signature.ts";
-import { Pointer } from "./types.ts";
+import { Signature, type SignatureInfo } from "./signature.ts";
+import type { Pointer } from "./types.ts";
 
 /** Git object types */
 export enum GitObjectType {

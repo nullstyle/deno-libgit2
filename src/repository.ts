@@ -14,27 +14,32 @@ import {
   GitErrorCode,
   GitReferenceType,
   GitRepositoryOpenFlags,
-  GitRepositoryState,
+  type GitRepositoryState,
   type GitStatusEntry,
-  GitStatusFlags,
+  type GitStatusFlags,
   type MergeAnalysisResult,
   type MergeOptions,
   type Pointer,
   type ReferenceInfo,
 } from "./types.ts";
-import { Blame, blameFile as blameFileFn } from "./blame.ts";
-import { deleteReflog, readReflog, Reflog, renameReflog } from "./reflog.ts";
+import { type Blame, blameFile as blameFileFn } from "./blame.ts";
 import {
-  GitSubmoduleIgnore,
+  deleteReflog,
+  readReflog,
+  type Reflog,
+  renameReflog,
+} from "./reflog.ts";
+import {
+  type GitSubmoduleIgnore,
   listSubmodules,
   lookupSubmodule,
-  Submodule,
+  type Submodule,
   submoduleStatus,
 } from "./submodule.ts";
 import {
   initRebase,
   openRebase,
-  Rebase,
+  type Rebase,
   type RebaseOptions,
 } from "./rebase.ts";
 import {
@@ -57,16 +62,15 @@ import {
   type RevertOptions,
 } from "./revert.ts";
 import {
-  Diff,
+  type Diff,
   diffIndexToWorkdir,
-  diffTreeToIndex,
   diffTreeToTree,
   diffTreeToWorkdir,
 } from "./diff.ts";
-import { Patch, patchFromDiff } from "./patch.ts";
+import { type Patch, patchFromDiff } from "./patch.ts";
 import {
   apply as applyFn,
-  ApplyLocation,
+  type ApplyLocation,
   applyToTree as applyToTreeFn,
 } from "./apply.ts";
 import {
@@ -74,14 +78,14 @@ import {
   listWorktrees,
   lookupWorktree,
   openWorktreeFromRepository,
-  Worktree,
+  type Worktree,
   type WorktreeAddOptions,
 } from "./worktree.ts";
 import {
   createNote as createNoteFn,
   defaultNotesRef as defaultNotesRefFn,
   listNotes as listNotesFn,
-  Note,
+  type Note,
   type NoteCreateOptions,
   type NoteReadOptions,
   readNote as readNoteFn,
@@ -90,7 +94,6 @@ import {
 import {
   describeCommit as describeCommitFn,
   type DescribeOptions,
-  DescribeStrategy,
   describeWorkdir as describeWorkdirFn,
 } from "./describe.ts";
 import {
@@ -101,26 +104,26 @@ import {
 import {
   listStashes,
   stashApply,
-  StashApplyOptions,
+  type StashApplyOptions,
   stashDrop,
-  StashEntry,
+  type StashEntry,
   stashPop,
   stashSave,
-  StashSaveOptions,
+  type StashSaveOptions,
 } from "./stash.ts";
 import {
   createLightweightTag,
-  CreateLightweightTagOptions,
+  type CreateLightweightTagOptions,
   createTag,
-  CreateTagOptions,
+  type CreateTagOptions,
   deleteTag,
   foreachTag,
   listTags,
   lookupTag,
-  Tag,
-  TagForeachInfo,
+  type Tag,
+  type TagForeachInfo,
 } from "./tag.ts";
-import { Config, getRepositoryConfig } from "./config.ts";
+import { type Config, getRepositoryConfig } from "./config.ts";
 import type { Index } from "./index.ts";
 import type { SignatureInfo } from "./signature.ts";
 import {
@@ -138,19 +141,19 @@ import {
   clearIgnoreRules as clearIgnoreRulesFn,
   pathIsIgnored as pathIsIgnoredFn,
 } from "./ignore.ts";
-import { createPathspec, GitPathspecFlags, Pathspec } from "./pathspec.ts";
+import { createPathspec, type Pathspec } from "./pathspec.ts";
 import { Mailmap } from "./mailmap.ts";
 import {
   createRemote,
   deleteRemote,
   listRemotes,
   lookupRemote,
-  Remote,
+  type Remote,
   renameRemote,
   setRemotePushUrl,
   setRemoteUrl,
 } from "./remote.ts";
-import { getRepositoryOdb, Odb } from "./odb.ts";
+import { getRepositoryOdb, type Odb } from "./odb.ts";
 import {
   createGitBuf,
   createOutPointer,

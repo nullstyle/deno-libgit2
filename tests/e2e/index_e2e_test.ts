@@ -7,12 +7,11 @@
 
 import {
   createFile,
-  deleteFile,
   setupLibrary,
   teardownLibrary,
   withTestContext,
 } from "./helpers.ts";
-import { Repository, Index } from "../../mod.ts";
+import { Index, Repository } from "../../mod.ts";
 import { assertEquals, assertExists } from "@std/assert";
 
 Deno.test({
@@ -21,7 +20,7 @@ Deno.test({
     setupLibrary();
 
     await t.step("New repository has empty index", async () => {
-      await withTestContext({}, async (ctx) => {
+      await withTestContext({}, (ctx) => {
         const index = Index.fromRepository(ctx.repo);
         assertEquals(index.entryCount, 0, "New index should be empty");
         index.close();
@@ -79,7 +78,11 @@ Deno.test({
         index.remove("remove.txt");
         index.write();
 
-        assertEquals(index.entryCount, 1, "Index should have one entry after removal");
+        assertEquals(
+          index.entryCount,
+          1,
+          "Index should have one entry after removal",
+        );
         index.close();
       });
     });

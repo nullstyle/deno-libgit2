@@ -8,7 +8,6 @@ import { checkError, GitError } from "./error.ts";
 import {
   type BlameHunk,
   type BlameOptions,
-  GitBlameFlags,
   GitErrorCode,
   type Pointer,
 } from "./types.ts";

@@ -4,7 +4,7 @@
  */
 
 import type { LibGit2 } from "./library.ts";
-import { getLibrary } from "./library.ts";
+
 import type { Pointer } from "./types.ts";
 import {
   createOutPointer,
@@ -259,7 +259,7 @@ export class Pathspec {
 
     // Get the commit first
     const commitOutBuf = createOutPointer();
-    let commitResult = this._lib.symbols.git_commit_lookup(
+    const commitResult = this._lib.symbols.git_commit_lookup(
       ptrOf(commitOutBuf),
       repo.ptr,
       ptrOf(oidBytes),

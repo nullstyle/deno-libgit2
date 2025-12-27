@@ -2,18 +2,9 @@
  * End-to-end tests for pathspec operations
  */
 
-import {
-  assertEquals,
-  assertExists,
-  assert,
-} from "@std/assert";
-import {
-  createTestContext,
-  cleanupTestContext,
-  createCommitWithFiles,
-  type TestContext,
-} from "./helpers.ts";
-import { init, shutdown, Repository, GitPathspecFlags } from "../../mod.ts";
+import { assertEquals, assertExists } from "@std/assert";
+import { cleanupTestContext, createTestContext } from "./helpers.ts";
+import { GitPathspecFlags, init, shutdown } from "../../mod.ts";
 
 Deno.test("E2E Pathspec Tests", async (t) => {
   init();
@@ -61,11 +52,11 @@ Deno.test("E2E Pathspec Tests", async (t) => {
       // With IGNORE_CASE flag
       assertEquals(
         ps.matchesPath("file.txt", GitPathspecFlags.IGNORE_CASE),
-        true
+        true,
       );
       assertEquals(
         ps.matchesPath("FILE.TXT", GitPathspecFlags.IGNORE_CASE),
-        true
+        true,
       );
 
       ps.free();

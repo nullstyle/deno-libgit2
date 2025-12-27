@@ -6,10 +6,10 @@
  */
 
 import {
+  createCommitWithFiles,
   setupLibrary,
   teardownLibrary,
   withTestContext,
-  createCommitWithFiles,
 } from "./helpers.ts";
 import { assertEquals, assertExists } from "@std/assert";
 
@@ -19,21 +19,25 @@ Deno.test({
     setupLibrary();
 
     await t.step("New repository has no branches", async () => {
-      await withTestContext({}, async (ctx) => {
+      await withTestContext({}, (ctx) => {
         const branches = ctx.repo.listBranches();
-        assertEquals(branches.length, 0, "New repository should have no branches");
+        assertEquals(
+          branches.length,
+          0,
+          "New repository should have no branches",
+        );
       });
     });
 
     await t.step("Repository with commit has a branch", async () => {
-      await withTestContext({ withInitialCommit: true }, async (ctx) => {
+      await withTestContext({ withInitialCommit: true }, (ctx) => {
         const branches = ctx.repo.listBranches();
         assertEquals(branches.length, 1, "Should have one branch");
       });
     });
 
     await t.step("Create and list multiple branches", async () => {
-      await withTestContext({ withInitialCommit: true }, async (ctx) => {
+      await withTestContext({ withInitialCommit: true }, (ctx) => {
         // Get HEAD commit for branch creation
         const headOid = ctx.repo.headOid();
         assertExists(headOid);
@@ -49,7 +53,7 @@ Deno.test({
     });
 
     await t.step("Delete a branch", async () => {
-      await withTestContext({ withInitialCommit: true }, async (ctx) => {
+      await withTestContext({ withInitialCommit: true }, (ctx) => {
         const headOid = ctx.repo.headOid();
         assertExists(headOid);
 
@@ -62,19 +66,27 @@ Deno.test({
         ctx.repo.deleteBranch("to-delete");
 
         branches = ctx.repo.listBranches();
-        assertEquals(branches.length, initialCount - 1, "Branch should be deleted");
+        assertEquals(
+          branches.length,
+          initialCount - 1,
+          "Branch should be deleted",
+        );
       });
     });
 
     await t.step("List references includes branches", async () => {
-      await withTestContext({ withInitialCommit: true }, async (ctx) => {
+      await withTestContext({ withInitialCommit: true }, (ctx) => {
         const refs = ctx.repo.listReferences();
-        assertEquals(refs.length >= 1, true, "Should have at least one reference");
+        assertEquals(
+          refs.length >= 1,
+          true,
+          "Should have at least one reference",
+        );
       });
     });
 
     await t.step("Resolve reference returns reference info", async () => {
-      await withTestContext({ withInitialCommit: true }, async (ctx) => {
+      await withTestContext({ withInitialCommit: true }, (ctx) => {
         const head = ctx.repo.head();
         const refInfo = ctx.repo.resolveReference(head.name);
         assertExists(refInfo);
@@ -84,10 +96,14 @@ Deno.test({
     });
 
     await t.step("HEAD points to a branch", async () => {
-      await withTestContext({ withInitialCommit: true }, async (ctx) => {
+      await withTestContext({ withInitialCommit: true }, (ctx) => {
         const head = ctx.repo.head();
         assertExists(head);
-        assertEquals(head.name.includes("refs/heads/"), true, "HEAD should point to a branch");
+        assertEquals(
+          head.name.includes("refs/heads/"),
+          true,
+          "HEAD should point to a branch",
+        );
       });
     });
 
@@ -113,19 +129,30 @@ Deno.test({
 
         assertExists(mainRef.target);
         assertExists(featureRef.target);
-        assertEquals(mainRef.target !== featureRef.target, true, "Branches should point to different commits");
-        assertEquals(featureRef.target, mainCommit, "Feature branch should point to original commit");
+        assertEquals(
+          mainRef.target !== featureRef.target,
+          true,
+          "Branches should point to different commits",
+        );
+        assertEquals(
+          featureRef.target,
+          mainCommit,
+          "Feature branch should point to original commit",
+        );
       });
     });
 
-    await t.step("isHeadDetached returns false for branch checkout", async () => {
-      await withTestContext({ withInitialCommit: true }, async (ctx) => {
-        assertEquals(ctx.repo.isHeadDetached, false);
-      });
-    });
+    await t.step(
+      "isHeadDetached returns false for branch checkout",
+      async () => {
+        await withTestContext({ withInitialCommit: true }, (ctx) => {
+          assertEquals(ctx.repo.isHeadDetached, false);
+        });
+      },
+    );
 
     await t.step("Multiple branches can point to same commit", async () => {
-      await withTestContext({ withInitialCommit: true }, async (ctx) => {
+      await withTestContext({ withInitialCommit: true }, (ctx) => {
         const headOid = ctx.repo.headOid();
         assertExists(headOid);
 

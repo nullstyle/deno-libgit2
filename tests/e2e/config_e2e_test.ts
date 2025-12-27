@@ -2,16 +2,8 @@
  * E2E tests for git config operations
  */
 
-import {
-  assertEquals,
-  assertExists,
-  assert,
-} from "@std/assert";
-import {
-  createTestContext,
-  cleanupTestContext,
-  type TestContext,
-} from "./helpers.ts";
+import { assert, assertEquals, assertExists } from "@std/assert";
+import { cleanupTestContext, createTestContext } from "./helpers.ts";
 import { init, shutdown } from "../../mod.ts";
 
 Deno.test("E2E Config Tests", async (t) => {
@@ -160,9 +152,15 @@ Deno.test("E2E Config Tests", async (t) => {
 
       // Should have our test entries
       assert(entries.length >= 3);
-      assert(entries.some((e) => e.name === "test.key1" && e.value === "value1"));
-      assert(entries.some((e) => e.name === "test.key2" && e.value === "value2"));
-      assert(entries.some((e) => e.name === "test.key3" && e.value === "value3"));
+      assert(
+        entries.some((e) => e.name === "test.key1" && e.value === "value1"),
+      );
+      assert(
+        entries.some((e) => e.name === "test.key2" && e.value === "value2"),
+      );
+      assert(
+        entries.some((e) => e.name === "test.key3" && e.value === "value3"),
+      );
 
       config.free();
     } finally {
@@ -281,14 +279,14 @@ Deno.test("E2E Config Tests", async (t) => {
 
       // Set core.autocrlf to false
       config.setBool("core.autocrlf", false);
-      
+
       let snapshot = config.snapshot();
       assertEquals(snapshot.getBool("core.autocrlf"), false);
       snapshot.free();
 
       // Set core.autocrlf to true
       config.setBool("core.autocrlf", true);
-      
+
       snapshot = config.snapshot();
       assertEquals(snapshot.getBool("core.autocrlf"), true);
       snapshot.free();

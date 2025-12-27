@@ -18,7 +18,7 @@ import {
   readPointerArrayValue,
   readSizeValueFromPtrView,
 } from "./utils.ts";
-import { type Diff, type DiffDelta, DiffDeltaType } from "./diff.ts";
+import type { Diff, DiffDelta, DiffDeltaType } from "./diff.ts";
 
 /**
  * Line statistics for a patch

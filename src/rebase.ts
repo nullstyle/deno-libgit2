@@ -16,7 +16,7 @@ import {
   readPointerValueFromPtrView,
   toCString,
 } from "./utils.ts";
-import { AnnotatedCommit } from "./merge.ts";
+import type { AnnotatedCommit } from "./merge.ts";
 import { Signature, type SignatureInfo } from "./signature.ts";
 
 /**

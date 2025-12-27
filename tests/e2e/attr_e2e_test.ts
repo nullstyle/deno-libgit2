@@ -2,16 +2,9 @@
  * E2E tests for git attribute operations
  */
 
-import {
-  assertEquals,
-  assertExists,
-  assert,
-} from "@std/assert";
-import {
-  createTestContext,
-  cleanupTestContext,
-} from "./helpers.ts";
-import { init, shutdown, GitAttrValue } from "../../mod.ts";
+import { assert, assertEquals } from "@std/assert";
+import { cleanupTestContext, createTestContext } from "./helpers.ts";
+import { GitAttrValue, init, shutdown } from "../../mod.ts";
 
 Deno.test("E2E Attr Tests", async (t) => {
   init();
@@ -49,7 +42,10 @@ Deno.test("E2E Attr Tests", async (t) => {
     const ctx = await createTestContext({ withInitialCommit: false });
     try {
       // Create .gitattributes with text attribute unset
-      await Deno.writeTextFile(`${ctx.repoPath}/.gitattributes`, "*.bin -text\n");
+      await Deno.writeTextFile(
+        `${ctx.repoPath}/.gitattributes`,
+        "*.bin -text\n",
+      );
 
       // Create a binary file
       await Deno.writeTextFile(`${ctx.repoPath}/data.bin`, "binary data");
@@ -66,7 +62,10 @@ Deno.test("E2E Attr Tests", async (t) => {
     const ctx = await createTestContext({ withInitialCommit: false });
     try {
       // Create .gitattributes with eol attribute
-      await Deno.writeTextFile(`${ctx.repoPath}/.gitattributes`, "*.txt eol=lf\n");
+      await Deno.writeTextFile(
+        `${ctx.repoPath}/.gitattributes`,
+        "*.txt eol=lf\n",
+      );
 
       // Create a text file
       await Deno.writeTextFile(`${ctx.repoPath}/file.txt`, "hello\n");
@@ -86,15 +85,20 @@ Deno.test("E2E Attr Tests", async (t) => {
       // Create .gitattributes with multiple attributes
       await Deno.writeTextFile(
         `${ctx.repoPath}/.gitattributes`,
-        "*.txt text eol=lf diff\n"
+        "*.txt text eol=lf diff\n",
       );
 
       // Create a text file
       await Deno.writeTextFile(`${ctx.repoPath}/file.txt`, "hello\n");
 
       // Get multiple attributes
-      const values = ctx.repo.getAttrMany("file.txt", ["text", "eol", "diff", "binary"]);
-      
+      const values = ctx.repo.getAttrMany("file.txt", [
+        "text",
+        "eol",
+        "diff",
+        "binary",
+      ]);
+
       assertEquals(values.length, 4);
       assertEquals(values[0].type, GitAttrValue.TRUE); // text
       assertEquals(values[1].type, GitAttrValue.STRING); // eol
@@ -112,7 +116,7 @@ Deno.test("E2E Attr Tests", async (t) => {
       // Create .gitattributes with multiple attributes
       await Deno.writeTextFile(
         `${ctx.repoPath}/.gitattributes`,
-        "*.txt text eol=lf diff\n"
+        "*.txt text eol=lf diff\n",
       );
 
       // Create a text file
@@ -139,7 +143,10 @@ Deno.test("E2E Attr Tests", async (t) => {
     const ctx = await createTestContext({ withInitialCommit: false });
     try {
       // Create .gitattributes
-      await Deno.writeTextFile(`${ctx.repoPath}/.gitattributes`, "*.txt text\n");
+      await Deno.writeTextFile(
+        `${ctx.repoPath}/.gitattributes`,
+        "*.txt text\n",
+      );
       await Deno.writeTextFile(`${ctx.repoPath}/file.txt`, "hello\n");
 
       // Get attribute
@@ -147,7 +154,10 @@ Deno.test("E2E Attr Tests", async (t) => {
       assertEquals(value.type, GitAttrValue.TRUE);
 
       // Modify .gitattributes
-      await Deno.writeTextFile(`${ctx.repoPath}/.gitattributes`, "*.txt -text\n");
+      await Deno.writeTextFile(
+        `${ctx.repoPath}/.gitattributes`,
+        "*.txt -text\n",
+      );
 
       // Flush cache
       ctx.repo.attrCacheFlush();
@@ -167,7 +177,10 @@ Deno.test("E2E Attr Tests", async (t) => {
       ctx.repo.addAttrMacro("mytext", "text eol=lf diff");
 
       // Create .gitattributes using the macro
-      await Deno.writeTextFile(`${ctx.repoPath}/.gitattributes`, "*.txt mytext\n");
+      await Deno.writeTextFile(
+        `${ctx.repoPath}/.gitattributes`,
+        "*.txt mytext\n",
+      );
       await Deno.writeTextFile(`${ctx.repoPath}/file.txt`, "hello\n");
 
       // The macro should expand to the individual attributes
@@ -188,7 +201,10 @@ Deno.test("E2E Attr Tests", async (t) => {
     const ctx = await createTestContext({ withInitialCommit: false });
     try {
       // Use built-in binary macro
-      await Deno.writeTextFile(`${ctx.repoPath}/.gitattributes`, "*.bin binary\n");
+      await Deno.writeTextFile(
+        `${ctx.repoPath}/.gitattributes`,
+        "*.bin binary\n",
+      );
       await Deno.writeTextFile(`${ctx.repoPath}/data.bin`, "binary");
 
       // Binary macro sets -diff -merge -text
@@ -208,7 +224,10 @@ Deno.test("E2E Attr Tests", async (t) => {
     const ctx = await createTestContext({ withInitialCommit: false });
     try {
       // Create .gitattributes
-      await Deno.writeTextFile(`${ctx.repoPath}/.gitattributes`, "*.txt text\n");
+      await Deno.writeTextFile(
+        `${ctx.repoPath}/.gitattributes`,
+        "*.txt text\n",
+      );
 
       // Get attribute for non-existent file (should still work based on pattern)
       const value = ctx.repo.getAttr("nonexistent.txt", "text");

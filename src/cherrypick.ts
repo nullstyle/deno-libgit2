@@ -3,15 +3,10 @@
  * Git cherry-pick operations for libgit2
  */
 
-import { getLibrary, type LibGit2 } from "./library.ts";
+import type { LibGit2 } from "./library.ts";
 import { checkError } from "./error.ts";
 import type { Pointer } from "./types.ts";
-import {
-  toCString,
-  createOutPointer,
-  readPointer,
-  ptrOf,
-} from "./utils.ts";
+import { createOutPointer, ptrOf, readPointer } from "./utils.ts";
 import { Index } from "./index.ts";
 
 /**
@@ -24,7 +19,7 @@ export interface CherrypickOptions {
 
 /**
  * Cherry-pick a commit against another commit, producing an index
- * 
+ *
  * @param lib - LibGit2 library instance
  * @param repoPtr - Repository pointer
  * @param cherrypickCommitPtr - Commit to cherry-pick
@@ -37,7 +32,7 @@ export function cherrypickCommit(
   repoPtr: Pointer,
   cherrypickCommitPtr: Pointer,
   ourCommitPtr: Pointer,
-  mainline: number = 0
+  mainline: number = 0,
 ): Index {
   const outPtr = createOutPointer();
 
@@ -47,7 +42,7 @@ export function cherrypickCommit(
     cherrypickCommitPtr,
     ourCommitPtr,
     mainline,
-    null // merge_options (use defaults)
+    null, // merge_options (use defaults)
   );
 
   checkError(lib, result, "Failed to cherry-pick commit");
@@ -57,7 +52,7 @@ export function cherrypickCommit(
 
 /**
  * Cherry-pick a commit, modifying the index and working directory
- * 
+ *
  * @param lib - LibGit2 library instance
  * @param repoPtr - Repository pointer
  * @param commitPtr - Commit to cherry-pick
@@ -65,12 +60,12 @@ export function cherrypickCommit(
 export function cherrypick(
   lib: LibGit2,
   repoPtr: Pointer,
-  commitPtr: Pointer
+  commitPtr: Pointer,
 ): void {
   const result = lib.symbols.git_cherrypick(
     repoPtr,
     commitPtr,
-    null // cherrypick_options (use defaults)
+    null, // cherrypick_options (use defaults)
   );
 
   checkError(lib, result, "Failed to cherry-pick");

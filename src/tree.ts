@@ -8,14 +8,13 @@ import { checkError, GitError } from "./error.ts";
 import { GitErrorCode, GitObjectType, type Pointer } from "./types.ts";
 import {
   createOutPointer,
-  Defer,
   fromCString,
   ptrOf,
   readOidHex,
   readPointer,
   toCString,
 } from "./utils.ts";
-import { Repository } from "./repository.ts";
+import type { Repository } from "./repository.ts";
 
 /**
  * File mode for tree entries

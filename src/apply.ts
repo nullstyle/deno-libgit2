@@ -3,15 +3,11 @@
  * Git apply operations for libgit2
  */
 
-import { getLibrary, type LibGit2 } from "./library.ts";
+import type { LibGit2 } from "./library.ts";
 import { checkError } from "./error.ts";
 import type { Pointer } from "./types.ts";
-import {
-  createOutPointer,
-  readPointer,
-  ptrOf,
-} from "./utils.ts";
-import { type Diff } from "./diff.ts";
+import { createOutPointer, ptrOf, readPointer } from "./utils.ts";
+import type { Diff } from "./diff.ts";
 import { Index } from "./index.ts";
 
 /**
@@ -28,7 +24,7 @@ export enum ApplyLocation {
 
 /**
  * Apply a diff to the repository
- * 
+ *
  * @param lib - LibGit2 library instance
  * @param repoPtr - Repository pointer
  * @param diff - Diff to apply
@@ -38,13 +34,13 @@ export function apply(
   lib: LibGit2,
   repoPtr: Pointer,
   diff: Diff,
-  location: ApplyLocation
+  location: ApplyLocation,
 ): void {
   const result = lib.symbols.git_apply(
     repoPtr,
     diff.ptr,
     location,
-    null // options (use defaults)
+    null, // options (use defaults)
   );
 
   checkError(lib, result, "Failed to apply diff");
@@ -52,7 +48,7 @@ export function apply(
 
 /**
  * Apply a diff to a tree, producing an index
- * 
+ *
  * @param lib - LibGit2 library instance
  * @param repoPtr - Repository pointer
  * @param treePtr - Tree pointer to apply diff to
@@ -63,7 +59,7 @@ export function applyToTree(
   lib: LibGit2,
   repoPtr: Pointer,
   treePtr: Pointer,
-  diff: Diff
+  diff: Diff,
 ): Index {
   const outPtr = createOutPointer();
 
@@ -72,7 +68,7 @@ export function applyToTree(
     repoPtr,
     treePtr,
     diff.ptr,
-    null // options (use defaults)
+    null, // options (use defaults)
   );
 
   checkError(lib, result, "Failed to apply diff to tree");

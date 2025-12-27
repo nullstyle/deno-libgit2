@@ -3,7 +3,7 @@
  * Tests use real file operations in temporary directories
  */
 
-import { assert, assertEquals, assertExists } from "@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { init, shutdown } from "../../mod.ts";
 import {
   cleanupTestContext,
