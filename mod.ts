@@ -71,7 +71,9 @@
 export {
   getLibrary,
   init,
+  type InitOptions,
   isLibraryLoaded,
+  LIBGIT2_VERSION,
   loadLibrary,
   shutdown,
   version,

@@ -11,13 +11,13 @@ dist_dir := "dist"
 default:
     @just --list
 
-# Run all tests
+# Run all tests (uses system-installed libgit2)
 test:
-    deno test --allow-ffi --allow-read --allow-write --allow-env --allow-run tests/
+    DENO_LIBGIT2_USE_SYSTEM=1 deno test --allow-ffi --allow-read --allow-write --allow-env --allow-run tests/
 
-# Run tests with coverage
+# Run tests with coverage (uses system-installed libgit2)
 test-coverage:
-    deno test --allow-ffi --allow-read --allow-write --allow-env --allow-run --coverage=coverage tests/
+    DENO_LIBGIT2_USE_SYSTEM=1 deno test --allow-ffi --allow-read --allow-write --allow-env --allow-run --coverage=coverage tests/
     deno coverage coverage
 
 # Run the basic usage example
@@ -284,3 +284,33 @@ package-release: build-all
     echo ""
     echo "Release archives created in {{ dist_dir }}/"
     ls -la *.tar.gz
+
+# Upload pre-built libraries to GitHub release
+upload-release:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    VERSION="v{{ libgit2_version }}"
+
+    echo "Uploading pre-built libraries to GitHub release ${VERSION}..."
+
+    # Check if release exists, if not create it
+    if ! gh release view "${VERSION}" &>/dev/null; then
+        echo "Creating release ${VERSION}..."
+        gh release create "${VERSION}" \
+            --title "libgit2 ${VERSION}" \
+            --notes-file "{{ justfile_directory() }}/docker/release-notes.md"
+    fi
+
+    # Upload each library file
+    cd {{ dist_dir }}
+    for lib in libgit2-*.dylib libgit2-*.so; do
+        if [ -f "$lib" ]; then
+            echo "Uploading: $lib"
+            gh release upload "${VERSION}" "$lib" --clobber
+        fi
+    done
+
+    echo ""
+    echo "Done! Release available at:"
+    gh release view "${VERSION}" --json url --jq '.url'

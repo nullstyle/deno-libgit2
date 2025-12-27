@@ -3,7 +3,9 @@
  * Library loading and initialization for libgit2
  *
  * Uses @denosaurs/plug for cross-platform library loading with automatic
- * caching and path resolution.
+ * caching and path resolution. By default, downloads pre-built binaries from
+ * GitHub releases for macOS and Linux. Use `preferSystemLibGit2: true` to
+ * use system-installed libgit2 instead.
  */
 
 import { dlopen, type FetchOptions } from "@denosaurs/plug";
@@ -16,6 +18,27 @@ import { createOutPointer, ptrOf, readInt32 } from "./utils.ts";
  * Type for the loaded libgit2 library
  */
 export type LibGit2 = Deno.DynamicLibrary<typeof symbols>;
+
+/**
+ * Options for initializing libgit2
+ */
+export interface InitOptions {
+  /**
+   * If true, prefer system-installed libgit2 over downloading from GitHub releases.
+   * Default is false (download pre-built binaries).
+   */
+  preferSystemLibGit2?: boolean;
+}
+
+/**
+ * The version of libgit2 that pre-built binaries are compiled against
+ */
+export const LIBGIT2_VERSION = "1.9.2";
+
+/**
+ * GitHub repository for pre-built binaries
+ */
+const GITHUB_REPO = "nullstyle/deno-libgit2";
 
 /**
  * Global library instance
@@ -33,9 +56,43 @@ let _initCount = 0;
 let _loadingPromise: Promise<LibGit2> | null = null;
 
 /**
- * Get the default library fetch options for libgit2
+ * Get the base URL for GitHub releases
  */
-function getDefaultFetchOptions(): FetchOptions {
+function getGitHubReleaseUrl(filename: string): string {
+  return `https://github.com/${GITHUB_REPO}/releases/download/v${LIBGIT2_VERSION}/${filename}`;
+}
+
+/**
+ * Get the fetch options for downloading pre-built binaries from GitHub releases
+ */
+function getGitHubReleaseFetchOptions(): FetchOptions {
+  return {
+    name: "git2",
+    url: {
+      darwin: {
+        aarch64: getGitHubReleaseUrl("libgit2-darwin-aarch64.dylib"),
+        x86_64: getGitHubReleaseUrl("libgit2-darwin-x86_64.dylib"),
+      },
+      linux: {
+        x86_64: getGitHubReleaseUrl("libgit2-linux-x86_64.so"),
+        aarch64: getGitHubReleaseUrl("libgit2-linux-aarch64.so"),
+      },
+      // Other platforms require system-installed libgit2
+      windows: "C:\\Program Files\\Git\\mingw64\\bin\\",
+      freebsd: "/usr/local/lib/",
+      netbsd: "/usr/pkg/lib/",
+      aix: "/opt/freeware/lib/",
+      solaris: "/usr/local/lib/",
+      illumos: "/usr/local/lib/",
+    },
+    cache: "use",
+  };
+}
+
+/**
+ * Get the fetch options for system-installed libgit2
+ */
+function getSystemLibraryFetchOptions(): FetchOptions {
   return {
     name: "git2",
     url: {
@@ -59,11 +116,56 @@ function getDefaultFetchOptions(): FetchOptions {
 }
 
 /**
+ * Check if system library should be used (via environment variable)
+ */
+function shouldUseSystemLibrary(): boolean {
+  try {
+    const envValue = Deno.env.get("DENO_LIBGIT2_USE_SYSTEM");
+    return envValue === "1" || envValue === "true";
+  } catch {
+    // Env permission may not be granted
+    return false;
+  }
+}
+
+/**
+ * Get the default library fetch options for libgit2
+ * @param preferSystem - If true, use system-installed libgit2. Default is false.
+ *                       Can also be set via DENO_LIBGIT2_USE_SYSTEM=1 environment variable.
+ */
+function getDefaultFetchOptions(preferSystem?: boolean): FetchOptions {
+  // If preferSystem is explicitly set, use that value
+  // Otherwise, check the environment variable
+  const useSystem = preferSystem ?? shouldUseSystemLibrary();
+
+  if (useSystem) {
+    return getSystemLibraryFetchOptions();
+  }
+  return getGitHubReleaseFetchOptions();
+}
+
+/**
+ * Type guard to check if an object is InitOptions
+ */
+function isInitOptions(
+  options: FetchOptions | InitOptions,
+): options is InitOptions {
+  return (
+    typeof options === "object" &&
+    options !== null &&
+    "preferSystemLibGit2" in options &&
+    // Make sure it's not a FetchOptions with preferSystemLibGit2 by accident
+    !("name" in options) &&
+    !("url" in options)
+  );
+}
+
+/**
  * Load the libgit2 library
- * @param options - Optional path to the library file or FetchOptions
+ * @param options - Optional path to the library file, FetchOptions, or InitOptions
  */
 export function loadLibrary(
-  options?: string | FetchOptions,
+  options?: string | FetchOptions | InitOptions,
 ): Promise<LibGit2> {
   // Return existing library if already loaded
   if (_lib !== null) {
@@ -78,14 +180,30 @@ export function loadLibrary(
   // Start loading
   _loadingPromise = (async () => {
     try {
-      const fetchOptions = options ?? getDefaultFetchOptions();
+      let fetchOptions: string | FetchOptions;
+
+      if (options === undefined) {
+        // Default: use env var or download from GitHub releases
+        fetchOptions = getDefaultFetchOptions();
+      } else if (typeof options === "string") {
+        // Direct path provided
+        fetchOptions = options;
+      } else if (isInitOptions(options)) {
+        // InitOptions provided
+        fetchOptions = getDefaultFetchOptions(options.preferSystemLibGit2);
+      } else {
+        // FetchOptions provided
+        fetchOptions = options;
+      }
+
       _lib = await dlopen(fetchOptions, symbols);
       return _lib;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new GitError(
         `Failed to load libgit2 library: ${message}. ` +
-          `Please ensure libgit2 is installed on your system.`,
+          `Try using init({ preferSystemLibGit2: true }) if you have libgit2 installed, ` +
+          `or ensure network access to download pre-built binaries.`,
         GitErrorCode.ERROR,
       );
     } finally {
@@ -121,13 +239,29 @@ export function isLibraryLoaded(): boolean {
  * Initialize the libgit2 library.
  * This must be called before using any other libgit2 functions.
  * Can be called multiple times; each call must be matched with a shutdown() call.
- * @param libraryPath - Optional path to the library file or FetchOptions
+ *
+ * By default, downloads pre-built binaries from GitHub releases for macOS and Linux.
+ * Use `{ preferSystemLibGit2: true }` to use system-installed libgit2 instead.
+ *
+ * @param options - Optional path to the library file, FetchOptions, or InitOptions
  * @returns The number of initializations (including this one)
+ *
+ * @example
+ * // Default: download pre-built binaries from GitHub releases
+ * await init();
+ *
+ * @example
+ * // Use system-installed libgit2
+ * await init({ preferSystemLibGit2: true });
+ *
+ * @example
+ * // Use a specific library path
+ * await init("/custom/path/to/libgit2.dylib");
  */
 export async function init(
-  libraryPath?: string | FetchOptions,
+  options?: string | FetchOptions | InitOptions,
 ): Promise<number> {
-  const lib = await loadLibrary(libraryPath);
+  const lib = await loadLibrary(options);
   const result = lib.symbols.git_libgit2_init();
 
   if (result < 0) {
@@ -197,13 +331,13 @@ export function versionString(): string {
 /**
  * Run a function with automatic library initialization and shutdown
  * @param fn - The function to run
- * @param libraryPath - Optional path to the library file or FetchOptions
+ * @param options - Optional path to the library file, FetchOptions, or InitOptions
  */
 export async function withLibrary<T>(
   fn: () => T | Promise<T>,
-  libraryPath?: string | FetchOptions,
+  options?: string | FetchOptions | InitOptions,
 ): Promise<T> {
-  await init(libraryPath);
+  await init(options);
   try {
     return await fn();
   } finally {

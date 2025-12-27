@@ -2,3 +2,4 @@
 coverage
 cov_profile
 dist/
+docker/release-notes.md

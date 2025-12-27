@@ -273,6 +273,7 @@ export async function createCommitWithDeletions(
 
 /**
  * Sets up the libgit2 library for tests
+ * Note: Tests should be run with DENO_LIBGIT2_USE_SYSTEM=1 to use system-installed libgit2
  */
 export async function setupLibrary(): Promise<void> {
   await init();
