@@ -2,6 +2,8 @@
 
 [![JSR](https://jsr.io/badges/@nullstyle/libgit2)](https://jsr.io/@nullstyle/libgit2)
 
+**WARNING:  This code has been vibed.  you probably don't want to depend upon it, but I'm a dork like that**
+
 A comprehensive Deno FFI binding for [libgit2](https://libgit2.org/), providing
 a powerful and flexible way to interact with Git repositories directly from Deno.
 
